@@ -1,3 +1,5 @@
 venv/
 .vscode/
-.code-workspace
+.DS_Store
+*.code-workspace
+*.txt
