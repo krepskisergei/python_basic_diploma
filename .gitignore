@@ -1,5 +1,15 @@
-venv/
-.vscode/
-.DS_Store
+# Ignore virtual env
+**/venv/
+
+# Ignore VS Code files
+**/.vscode/
+**/.DS_Store
 *.code-workspace
+
+# Ignore python bytecode
+*.pyc
+*.pyo
+
+# Ignore private config and information
+**/config.py
 *.info
