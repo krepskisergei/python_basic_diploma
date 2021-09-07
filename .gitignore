@@ -12,4 +12,5 @@
 
 # Ignore private config and information
 **/config.py
+**/.env
 *.info

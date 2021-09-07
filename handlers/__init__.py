@@ -2,14 +2,15 @@ import sys, os
 import telebot
 
 
-# Add parent directory path for importing config, rapidapi, db
+# Add parent directory path for importing messages, rapidapi, db
 sys.path.insert(1, os.path.abspath('.'))
 
 
-import config
-
-
-bot = telebot.TeleBot(token=config.BOT_TOKEN)
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
+if not BOT_TOKEN:
+    raise EnvironmentError
+else:
+    bot = telebot.TeleBot(token=BOT_TOKEN)
 
 
 # common command handlers (start, help)
