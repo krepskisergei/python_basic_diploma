@@ -1,4 +1,5 @@
 from handlers import bot
+import messages
 
 
 @bot.message_handler(content_types=['text'])
@@ -17,4 +18,4 @@ def text_message(message):
     'sticker'
 ])
 def error_message(message):
-    bot.send_message(message.from_user.id, 'Ошибка.')
+    bot.send_message(message.from_user.id, messages.ERROR_CONTENT_MESSAGE)
