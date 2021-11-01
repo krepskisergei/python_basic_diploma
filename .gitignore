@@ -11,6 +11,6 @@
 *.pyo
 
 # Ignore private config and information
-**/config.py
-**/.env
-*.info
+#**/config.py
+#**/.env
+#*.info
