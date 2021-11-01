@@ -1,0 +1,198 @@
+locations_answer
+{
+    'term': 'moscow', 
+    'moresuggestions': 10, 
+    'autoSuggestInstance': None, 
+    'trackingID': '614edd56f3f737c67edcc79e56184f8b', 
+    'misspellingfallback': False, 
+    'suggestions': [
+        {
+            'group': 'CITY_GROUP', 
+            'entities': [
+                {
+                    'geoId': '2395', 
+                    'destinationId': '1153093', 
+                    'landmarkCityDestinationId': None, 
+                    'type': 'CITY', 
+                    'redirectPage': 'DEFAULT_PAGE', 
+                    'latitude': 55.55918638239373, 
+                    'longitude': 37.363508158852, 
+                    'searchDetail': None, 
+                    'caption': 'Москва, Россия', 
+                    'name': 'Москва'
+                }, {
+                    'geoId': '3000662241', 
+                    'destinationId': '10565407', 
+                    'landmarkCityDestinationId': None, 
+                    'type': 'NEIGHBORHOOD', 
+                    'redirectPage': 'DEFAULT_PAGE', 
+                    'latitude': 55.75392982248384, 
+                    'longitude': 37.61520066060891, 
+                    'searchDetail': None, 
+                    'caption': 'Центр Москвы, Москва, Россия', 
+                    'name': 'Центр Москвы'
+                }, {
+                    'geoId': '6126', 
+                    'destinationId': '1449014', 
+                    'landmarkCityDestinationId': None, 
+                    'type': 'CITY', 
+                    'redirectPage': 'DEFAULT_PAGE', 
+                    'latitude': 46.731651, 
+                    'longitude': -117.001343, 
+                    'searchDetail': None, 
+                    'caption': 'Москва, Айдахо, США', 
+                    'name': 'Москва'
+                }, {
+                    'geoId': '6057777', 
+                    'destinationId': '1118662', 
+                    'landmarkCityDestinationId': None, 
+                    'type': 'CITY', 
+                    'redirectPage': 
+                    'DEFAULT_PAGE', 
+                    'latitude': 55.42470397784816, 
+                    'longitude': 37.82827198431038, 
+                    'searchDetail': None, 
+                    'caption': 'Домодедово, Московская область, Подмосковье (Московская область), Россия', 
+                    'name': 'Домодедово, Московская область'
+                }
+            ]
+        }, {
+            'group': 'HOTEL_GROUP', 
+            'entities': [
+                {
+                    'geoId': '4028649', 
+                    'destinationId': '366892', 
+                    'landmarkCityDestinationId': None, 
+                    'type': 'HOTEL', 
+                    'redirectPage': 'DEFAULT_PAGE', 
+                    'latitude': 55.77401, 
+                    'longitude': 37.49955, 
+                    'searchDetail': None, 
+                    'caption': "<span class='highlighted'>Moscow</span> Holiday Hotel, Москва, Россия", 
+                    'name': 'Moscow Holiday Hotel'
+                }, {
+                    'geoId': '2794154', 
+                    'destinationId': '323564', 
+                    'landmarkCityDestinationId': None, 
+                    'type': 'HOTEL', 
+                    'redirectPage': 'DEFAULT_PAGE', 
+                    'latitude': 55.75326, 
+                    'longitude': 37.59359, 
+                    'searchDetail': None, 
+                    'caption': "<span class='highlighted'>Moscow</span> Suites Новый Арбат, Москва, Россия", 
+                    'name': 'Moscow Suites Новый Арбат'
+                }, {
+                    'geoId': '45407401', 
+                    'destinationId': '1454036832', 
+                    'landmarkCityDestinationId': None, 
+                    'type': 'HOTEL', 
+                    'redirectPage': 'DEFAULT_PAGE', 
+                    'latitude': 55.741884, 
+                    'longitude': 37.609527, 
+                    'searchDetail': None, 
+                    'caption': "Отель <span class='highlighted'>Moscow</span> Points — Red\xa0October, Москва, Россия", 
+                    'name': 'Отель Moscow Points — Red\xa0October'
+                }, {
+                    'geoId': '7541904', 
+                    'destinationId': '450053', 
+                    'landmarkCityDestinationId': None, 
+                    'type': 'HOTEL', 
+                    'redirectPage': 'DEFAULT_PAGE', 
+                    'latitude': 55.76549, 
+                    'longitude': 37.6041, 
+                    'searchDetail': None, 
+                    'caption': "<span class='highlighted'>Moscow</span> Suites Тверская, Москва, Россия", 
+                    'name': 'Moscow Suites Тверская'
+                }, {
+                    'geoId': '15815305', 
+                    'destinationId': '507089760', 
+                    'landmarkCityDestinationId': None, 
+                    'type': 'HOTEL', 
+                    'redirectPage': 'DEFAULT_PAGE', 
+                    'latitude': 55.74299, 
+                    'longitude': 37.56289, 
+                    'searchDetail': None, 
+                    'caption': "Novotel <span class='highlighted'>Moscow</span> Kievskaya, Москва, Россия", 
+                    'name': 'Novotel Moscow Kievskaya'
+                }
+            ]
+        }, {
+            'group': 'LANDMARK_GROUP', 
+            'entities': [
+                {
+                    'geoId': '6297903', 
+                    'destinationId': '1786289', 
+                    'landmarkCityDestinationId': None, 
+                    'type': 'LANDMARK', 
+                    'redirectPage': 'DEFAULT_PAGE', 
+                    'latitude': 55.862422, 
+                    'longitude': 37.204915, 
+                    'searchDetail': None, 
+                    'caption': 'Москоу Кантри Клаб, Подмосковье (Московская область), Россия', 
+                    'name': 'Москоу Кантри Клаб'
+                }, {
+                    'geoId': '553248621563233831', 
+                    'destinationId': '10673392', 
+                    'landmarkCityDestinationId': '1101008', 
+                    'type': 'LANDMARK', 
+                    'redirectPage': 'DEFAULT_PAGE', 
+                    'latitude': 55.825261, 
+                    'longitude': 37.265742, 
+                    'searchDetail': None, 
+                    'caption': "Le Meridien <span class='highlighted'>Moscow</span> Country Club, Krasnogorsk, Moscow Oblast, Russia", 
+                    'name': 'Le Meridien Moscow Country Club'
+                }, {
+                    'geoId': '6057782', 
+                    'destinationId': '1647675', 
+                    'landmarkCityDestinationId': '1153093', 
+                    'type': 'LANDMARK', 
+                    'redirectPage': 'DEFAULT_PAGE', 
+                    'latitude': 55.75130404103457, 
+                    'longitude': 37.61753365869443, 
+                    'searchDetail': None, 
+                    'caption': 'Московский Кремль, Москва, Россия', 
+                    'name': 'Московский Кремль'
+                }
+            ]
+        }, {
+            'group': 'TRANSPORT_GROUP', 
+            'entities': [
+                {
+                    'geoId': '5196630', 
+                    'destinationId': '1666214', 
+                    'landmarkCityDestinationId': None, 
+                    'type': 'AIRPORT', 
+                    'redirectPage': 'DEFAULT_PAGE', 
+                    'latitude': 55.603842, 
+                    'longitude': 37.290621, 
+                    'searchDetail': None, 
+                    'caption': 'Москва, Россия (VKO-Внуково, международный)', 
+                    'name': 'Москва (VKO-Внуково, международный)'
+                }, {
+                    'geoId': '5199443', 
+                    'destinationId': '1666194', 
+                    'landmarkCityDestinationId': None, 
+                    'type': 'AIRPORT', 
+                    'redirectPage': 'DEFAULT_PAGE', 
+                    'latitude': 55.966884, 
+                    'longitude': 37.415694, 
+                    'searchDetail': None, 
+                    'caption': 'Москва, Россия (SVO-Шереметьево)', 
+                    'name': 'Москва (SVO-Шереметьево)'
+                }, {
+                    'geoId': '6022860', 
+                    'destinationId': '1709351', 
+                    'landmarkCityDestinationId': None, 
+                    'type': 'TRAIN_STATION', 
+                    'redirectPage': 'DEFAULT_PAGE', 
+                    'latitude': 55.776825, 
+                    'longitude': 37.582089, 
+                    'searchDetail': None, 
+                    'caption': 'Белорусский вокзал, Москва, Россия', 
+                    'name': 'Белорусский вокзал'
+                }
+            ]
+        }
+    ], 
+    'geocodeFallback': False
+}
