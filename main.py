@@ -1,15 +1,16 @@
-import os
-from dotenv import load_dotenv
+# python_basic_diploma/main.py
+from sys import exit
+
+from app.environment import check_environment
 
 
+# check environment
 if __name__ == '__main__':
-    # load secrect from .env file to env
-    dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
-    if not os.path.exists(dotenv_path):
-        raise EnvironmentError
+    if not check_environment():
+        exit()
     else:
-        load_dotenv(dotenv_path)
-        
-        # run Bot
-        from handlers import bot
+        # import bot after environment loaded
+        from app.handlers import bot
+        # starting TeleBot
+        print('Bot started. Press Ctrl+C to terminate.')
         bot.polling(non_stop=True, interval=0)

@@ -1,94 +1,92 @@
-import config
+import unittest
+from os import environ
+from unittest.case import TestCase
 
-class Query:
-    """
-    Класс запроса пользователя
-    Содержит данные для lowprice, highprice
-    """
-    __type: str
-    __town: str = None
-    __hotels_count: int = None
-    __show_photo: bool = None
-    
-    def __init__(self, type: str) -> None:
-        self.__type = type
+from app.service import check_environment
+from app.classes import UserQuery, Session
+from app.dialogs import DISPLAY_PHOTOS_TRUE, DISPLAY_PHOTOS_FALSE
+
+
+check_environment()
+handler = '/bestdeal'
+test_dict = {
+    'command': handler,
+    'town_id': 12345,
+    'min_price': 100,
+    'max_price': 200,
+    'min_distance': 2,
+    'max_distance': 5,
+    'results_num': int(environ.get('MAX_RESULTS')),
+    'display_photos': True
+}
+
+class UserQueryTest(unittest.TestCase):
+    class_entity = UserQuery(handler)
+
+    def test_update(self):
+        self.assertEqual(
+            self.class_entity.update(town_id='moscow'), False
+        )
+        self.assertEqual(
+            self.class_entity.update(town_id=str(test_dict['town_id'])), 
+            True
+        )
+
+        self.assertEqual(self.class_entity.update(min_price='-'), False)
+        self.assertEqual(
+            self.class_entity.update(min_price=str(test_dict['min_price'])), 
+            True
+        )
+
+        self.assertEqual(self.class_entity.update(max_price='-'), False)
+        self.assertEqual(
+            self.class_entity.update(max_price=str(test_dict['max_price'])), 
+            True
+        )
+
+        self.assertEqual(self.class_entity.update(min_dist='-'), False)
+        self.assertEqual(
+            self.class_entity.update(min_dist=str(test_dict['min_distance'])), 
+            True
+        )
+
+        self.assertEqual(self.class_entity.update(max_dist='-'), False)
+        self.assertEqual(
+            self.class_entity.update(max_dist=str(test_dict['max_distance'])), 
+            True
+        )
         
-    @property
-    def type(self) -> str:
-        return self.__type
-    
-    @property
-    def town(self) -> str:
-        return self.__town
-    
-    @property
-    def hotels_count(self) -> int:
-        return self.__hotels_count
-    
-    @property
-    def show_photo(self) -> bool:
-        return self.__show_photo
-    
-    @town.setter
-    def town(self, town: str) -> None:
-        self.__town = town
-    
-    @hotels_count.setter
-    def hotels_count(self, hotels_count: int) -> None:
-        self.__hotels_count = hotels_count \
-            if hotels_count < config.RESULT_MAX_COUNT \
-            else config.RESULT_MAX_COUNT
-    
-    @show_photo.setter
-    def show_photo(self, show_photo: bool) -> None:
-        self.__show_photo = show_photo
+        self.assertEqual(self.class_entity.update(results_num='-'), False)
+        self.assertEqual(self.class_entity.update(results_num='10000'), True)
+
+        self.assertEqual(self.class_entity.update(display_photos='-'), False)
+        self.assertEqual(
+            self.class_entity.update(display_photos=DISPLAY_PHOTOS_TRUE), 
+            True
+        )
+
+        self.assertEqual(self.class_entity.dictionary, test_dict)
 
 
-class BestDealQuery(Query):
-    """
-    Дочерний класс для запроса bestdeal.
-    Объявляется без переменных.
-    """
-    __min_price: int = None
-    __max_price: int = None
-    __max_distance: int = None
-    
-    def __init__(self):
-        super().__init__('bestdeal')
-    
-    @property
-    def min_price(self) -> int:
-        return self.__min_price
-    
-    @property
-    def max_price(self) -> int:
-        return self.__max_price
-    
-    @property
-    def max_distance(self) -> int:
-        return self.__max_distance
-    
-    @min_price.setter
-    def min_price(self, min_price: int) -> None:
-        self.__min_price = min_price
-    
-    @max_price.setter
-    def max_price(self, max_price: int) -> None:
-        self.__max_price = max_price
-    
-    @max_distance.setter
-    def max_distance(self, max_distance: int) -> None:
-        self.__max_distance = max_distance
+class SessionTest(unittest.TestCase):
+    def test_session(self):
+        sessions = Session()
+        chat_id = '111111'
+        chat_id_clear = 'test_clear'
+        
+        self.assertEqual(sessions.create(chat_id, handler), True)
+        self.assertEqual(sessions.create(chat_id_clear, ''), True)
+        self.assertEqual(sessions.clear(''), False)
+        self.assertEqual(sessions.clear(chat_id_clear), True)
 
-q = BestDealQuery()
-print(q.type)
-print(q.town)
-print(q.hotels_count)
-print(q.show_photo)
-q.town = 'Moscow'
-q.hotels_count = 12
-q.show_photo = False
-print(q.type)
-print(q.town)
-print(q.hotels_count)
-print(q.show_photo)
+        for key, value in test_dict.items():
+            if key == 'display_photos':
+                value = DISPLAY_PHOTOS_TRUE
+            if key != 'command':
+                self.assertEqual(sessions.update(chat_id, key, str(value)), True, msg=key)
+
+        
+
+
+if __name__ == '__main__':
+    unittest.main()
