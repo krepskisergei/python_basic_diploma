@@ -188,22 +188,16 @@ def get_hotel_photos(hotel_id: str) -> list:
         data = json.loads(responce.text)
         try:
             for hotel_image in data['hotelImages']:
-                # TODO: choose image sizes
-                """
-                1:  t
-                2:  s
-                3:  b
-                9:  l
-                11: n
-                12: g
-                13: d
-                14: y
-                15: z
-                16: e
-                17: w
-                """
+                base_url = hotel_image['baseUrl']
+                # choose biggest image size
+                photo_sizes = hotel_image['sizes']
+                suffix = sorted(
+                    photo_sizes, 
+                    key=lambda i: i['type'], 
+                    reverse=True
+                )[0]['suffix']
                 result.append(
-                    hotel_image['baseUrl'].replace('{size}', 'y')
+                    base_url.replace('{size}', suffix)
                 )
                 if len(result) >= max_num_photos:
                     break
