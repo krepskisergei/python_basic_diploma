@@ -17,18 +17,22 @@ def _get_file_handler() -> logging.FileHandler:
     return file_handler
 
 
-def _get_stream_handler() -> logging.FileHandler:
-    """Create stream handler"""
+def _get_stream_handler(stream_level:int=logging.INFO) -> logging.FileHandler:
+    """Create stream handler."""
     stream_handler = logging.StreamHandler()
-    stream_handler.setLevel(logging.DEBUG)
+    stream_handler.setLevel(stream_level)
     stream_handler.setFormatter(logging.Formatter(_LOG_FORMAT))
     return stream_handler
 
 
-def get_logger(name) -> logging.Logger:
-    """Return logger for module. Use 'get_logger(__name__)' in code."""
+def get_logger(name, stream_level:int=logging.INFO) -> logging.Logger:
+    """
+    Return logger for module. 
+    stream_level - logging level for stream.
+    Use 'get_logger(__name__)' in code.
+    """
     logger = logging.getLogger(name)
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(stream_level)
     logger.addHandler(_get_file_handler())
-    logger.addHandler(_get_stream_handler())
+    logger.addHandler(_get_stream_handler(stream_level))
     return logger
