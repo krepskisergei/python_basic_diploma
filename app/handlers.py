@@ -5,7 +5,6 @@ Contains Telebot and basic handlers
 from os import environ
 from sys import exit
 from telebot import TeleBot
-import telebot
 from telebot.types import ReplyKeyboardMarkup, InputMediaPhoto
 
 import app.dialogs as d
@@ -13,6 +12,7 @@ import app.service as s
 from app.logger import get_logger
 
 
+# initialize logger
 logger = get_logger(__name__)
 
 BOT_TOKEN = environ.get('BOT_TOKEN')
@@ -31,35 +31,25 @@ else:
 def start_message(message):
     """Start command"""
     logger.info(f'[{message.text}] handler from chat {message.chat.id}.')
-    bot.send_message(message.from_user.id, d.START_MESSAGE)
+    bot.send_message(
+        message.from_user.id, d.START_MESSAGE, parse_mode='Markdown')
 
 
 @bot.message_handler(commands=['help'])
 def help_message(message):
     """Help command"""
     logger.info(f'[{message.text}] handler from chat {message.chat.id}.')
-    bot.send_message(message.from_user.id, d.HELP_MEASSAGE)
+    bot.send_message(
+        message.from_user.id, d.HELP_MEASSAGE, parse_mode='Markdown')
 
 
 """Bot handlers"""
-@bot.message_handler(commands=['photo'])
-def photo(message):
-    from requests import request
-    urls = ['https://exp.cdn-hotels.com/hotels/37000000/36790000/36789900/36789845/d4aada11_y.jpg',
-    'https://exp.cdn-hotels.com/hotels/37000000/36790000/36789900/36789845/d4aada11_w.jpg'
-    ]
-    photos = list()
-    for url in urls:
-        if url == urls[0]:
-            photos.append(telebot.types.InputMediaPhoto(url, caption='Caption'))
-        else:
-            photos.append(telebot.types.InputMediaPhoto(url))
-    
-    bot.send_media_group(message.chat.id, photos)
-    #bot.send_photo(message.chat.id, photo=url, caption='Caption')
-
 @bot.message_handler(commands=['lowprice', 'highprice', 'bestdeal'])
 def basic_commands(message):
+    """
+    Message handler for lowprice, highprice and bestdeal commands.
+    Send command description message, create session and run pre_ask_town handler.
+    """
     logger.info(f'[{message.text}] handler from chat {message.chat.id}.')
     msg_dict = {
         '/lowprice': d.LOWPRICE_MESSAGE,
@@ -67,7 +57,10 @@ def basic_commands(message):
         '/bestdeal': d.BESTDEAL_MESSAGE,
     }
     if s.create_session(message.chat.id, message.text):
-        bot.send_message(message.chat.id, msg_dict[message.text.lower()])
+        bot.send_message(
+            message.chat.id, 
+            msg_dict[message.text.lower()], 
+            parse_mode='Markdown')
         next_handler_pre_ask_town(message)
     else:
         bot.reply_to(message, d.UNKNOWN_ERROR_MESSAGE)
@@ -75,6 +68,7 @@ def basic_commands(message):
 
 @bot.message_handler(commands=['history'])
 def history_command(message):
+    """Message handler for history command."""
     logger.info(f'[{message.text}] handler from chat {message.chat.id}.')
     pass
 
@@ -99,28 +93,32 @@ def error_message(message):
 
 """Next handlers"""
 def next_handler_pre_ask_town(message) -> None:
+    """Send GET_TOWN_MESSAGE and register ask_town next handler."""
     logger.info((
         f'[{message.text}] run [next_handler_pre_ask_town] '
-        f'from chat {message.chat.id}.'
-    ))
-    msg = bot.send_message(message.chat.id, d.GET_TOWN_MESSAGE)
+        f'from chat {message.chat.id}.'))
+    msg = bot.send_message(
+        message.chat.id, d.GET_TOWN_MESSAGE, parse_mode='Markdown')
     bot.register_next_step_handler(msg, next_handler_ask_town)
 
 
 def next_handler_ask_town(message) -> None:
+    """Get town name."""
     logger.info((
         f'[{message.text}] run [next_handler_ask_town] '
-        f'from chat {message.chat.id}.'
-    ))
+        f'from chat {message.chat.id}.'))
     bot.send_chat_action(message.chat.id, 'typing')
     is_error, return_town, markup, next_step = s.proceccing_town_id(
-        message.chat.id, message.text
-    )
+        message.chat.id, message.text)
     if is_error:
         bot.reply_to(message, d.UNKNOWN_ERROR_MESSAGE)
     else:
         if return_town:
-            bot.send_message(message.chat.id, f'{d.TOWN_SELECTED_MESSAGE}{return_town}')
+            bot.send_message(
+                message.chat.id, 
+                f'{d.TOWN_SELECTED_MESSAGE}{return_town}', 
+                parse_mode='Markdown')
+            # TODO: перенести выбор next_handler на выбор CheckOut
             # next handler
             if next_step == 'results_num':
                 next_handler_pre_ask_results_num(message)
@@ -128,34 +126,38 @@ def next_handler_ask_town(message) -> None:
                 next_handler_pre_ask_min_price(message)
         else:
             if not markup:
-                bot.send_message(message.chat.id, d.WRONG_TOWN_MESSAGE)
+                bot.send_message(
+                    message.chat.id, 
+                    d.WRONG_TOWN_MESSAGE, 
+                    parse_mode='Markdown')
                 next_handler_pre_ask_town(message)
             else:
                 msg = bot.send_message(
                     message.chat.id,
                     d.SELECT_TOWN_MESSAGE,
-                    reply_markup=markup
-                )
+                    reply_markup=markup,
+                    parse_mode='Markdown')
                 bot.register_next_step_handler(msg, next_handler_ask_town)
 
 
 def next_handler_pre_ask_min_price(message):
+    """Send GET_MIN_PRICE message and register ask_min_price next handler."""
     logger.info((
         f'[{message.text}] run [next_handler_pre_ask_min_price] '
         f'from chat {message.chat.id}.'
     ))
-    msg = bot.send_message(message.chat.id, d.GET_MIN_PRICE)
+    msg = bot.send_message(
+        message.chat.id, d.GET_MIN_PRICE, parse_mode='Markdown')
     bot.register_next_step_handler(msg, next_handler_ask_min_price)
 
 
 def next_handler_ask_min_price(message):
+    """Get min_price"""
     logger.info((
         f'[{message.text}] run [next_handler_ask_min_price] '
-        f'from chat {message.chat.id}.'
-    ))
+        f'from chat {message.chat.id}.'))
     user_error, is_error = s.process_int_values(
-        message.chat.id, 'min_price', message.text
-    )
+        message.chat.id, 'min_price', message.text)
     if user_error:
         bot.reply_to(message, d.WRONG_PRICE)
         next_handler_pre_ask_min_price(message)
@@ -169,22 +171,22 @@ def next_handler_ask_min_price(message):
 
 
 def next_handler_pre_ask_max_price(message):
+    """Send GET_MAX_PRICE message and register ask_max_price next handler."""
     logger.info((
         f'[{message.text}] run [next_handler_pre_ask_max_price] '
-        f'from chat {message.chat.id}.'
-    ))
-    msg = bot.send_message(message.chat.id, d.GET_MAX_PRICE)
+        f'from chat {message.chat.id}.'))
+    msg = bot.send_message(
+        message.chat.id, d.GET_MAX_PRICE, parse_mode='Markdown')
     bot.register_next_step_handler(msg, next_handler_ask_max_price)
 
 
 def next_handler_ask_max_price(message):
+    """Get max_price."""
     logger.info((
         f'[{message.text}] run [next_handler_ask_max_price] '
-        f'from chat {message.chat.id}.'
-    ))
+        f'from chat {message.chat.id}.'))
     user_error, is_error = s.process_int_values(
-        message.chat.id, 'max_price', message.text
-    )
+        message.chat.id, 'max_price', message.text)
     if user_error:
         bot.reply_to(message, d.WRONG_PRICE)
         next_handler_pre_ask_max_price(message)
@@ -198,15 +200,19 @@ def next_handler_ask_max_price(message):
 
 
 def next_handler_pre_ask_min_distance(message):
+    """
+    Send GET_MIN_DISTANCE message and register ask_min_distance next handler.
+    """
     logger.info((
         f'[{message.text}] run [next_handler_pre_ask_min_distance] '
-        f'from chat {message.chat.id}.'
-    ))
-    msg = bot.send_message(message.chat.id, d.GET_MIN_DISTANCE)
+        f'from chat {message.chat.id}.'))
+    msg = bot.send_message(
+        message.chat.id, d.GET_MIN_DISTANCE, parse_mode='Markdown')
     bot.register_next_step_handler(msg, next_handler_ask_min_distance)
 
 
 def next_handler_ask_min_distance(message):
+    """Get min_distance."""
     logger.info((
         f'[{message.text}] run [next_handler_ask_min_distance] '
         f'from chat {message.chat.id}.'
@@ -227,22 +233,26 @@ def next_handler_ask_min_distance(message):
 
 
 def next_handler_pre_ask_max_distance(message):
+    """
+    Send GET_MAX_DISTANCE message and register ask_max_distance next handler.
+    """
     logger.info((
         f'[{message.text}] run [next_handler_pre_ask_max_distance] '
         f'from chat {message.chat.id}.'
     ))
-    msg = bot.send_message(message.chat.id, d.GET_MAX_DISTANCE)
+    msg = bot.send_message(
+        message.chat.id, d.GET_MAX_DISTANCE, parse_mode='Markdown')
     bot.register_next_step_handler(msg, next_handler_ask_max_distance)
 
 
 def next_handler_ask_max_distance(message):
+    """Get max_distance."""
     logger.info((
         f'[{message.text}] run [next_handler_ask_max_distance] '
-        f'from chat {message.chat.id}.'
-    ))
+        f'from chat {message.chat.id}.'))
     user_error, is_error = s.process_int_values(
-        message.chat.id, 'max_distance', message.text
-    )
+        message.chat.id, 'max_distance', message.text)
+    
     if user_error:
         bot.reply_to(message, d.WRONG_DISTANCE)
         next_handler_pre_ask_max_distance(message)
@@ -256,15 +266,19 @@ def next_handler_ask_max_distance(message):
 
 
 def next_handler_pre_ask_results_num(message):
+    """
+    Send GET_RESULTS_NUM message and register ask_results_num next handler.
+    """
     logger.info((
         f'[{message.text}] run [next_handler_pre_ask_results_num] '
-        f'from chat {message.chat.id}.'
-    ))
-    msg = bot.send_message(message.chat.id, d.GET_RESULTS_NUM_MESSAGE)
+        f'from chat {message.chat.id}.'))
+    msg = bot.send_message(
+        message.chat.id, d.GET_RESULTS_NUM_MESSAGE, parse_mode='Markdown')
     bot.register_next_step_handler(msg, next_handler_ask_results_num)
 
 
 def next_handler_ask_results_num(message):
+    """Get results_num."""
     logger.info((
         f'[{message.text}] run [next_handler_ask_results_num] '
         f'from chat {message.chat.id}.'
@@ -282,54 +296,57 @@ def next_handler_ask_results_num(message):
         else:
             bot.send_message(
                 message.chat.id, 
-                f'{d.SELECT_RESULTS_NUM_MESSAGE}{num_results}'
-            )
+                f'{d.SELECT_RESULTS_NUM_MESSAGE}{num_results}', 
+                parse_mode='Markdown')
             # next handler
             next_handler_pre_ask_display_photos(message)
 
 
 
 def next_handler_pre_ask_display_photos(message):
+    """
+    Send GET_DISPLAY_PHOTOS message, generate reply_keyboard and register ask_max_price next handler.
+    """
     logger.info((
         f'[{message.text}] run [next_handler_pre_ask_display_photos] '
-        f'from chat {message.chat.id}.'
-    ))
+        f'from chat {message.chat.id}.'))
     markup = ReplyKeyboardMarkup(one_time_keyboard=True)
     markup.row_width = 1
     markup.add(d.DISPLAY_PHOTOS_TRUE, d.DISPLAY_PHOTOS_FALSE)
     msg = bot.send_message(
         chat_id=message.chat.id,
         text=d.GET_DISPLAY_PHOTOS,
-        reply_markup=markup
-    )
+        reply_markup=markup,
+        parse_mode='Markdown')
     bot.register_next_step_handler(msg, next_handler_ask_display_photos)
 
 
 def next_handler_ask_display_photos(message):
+    """Get display_photos."""
     logger.info((
         f'[{message.text}] run [next_handler_ask_display_photos] '
-        f'from chat {message.chat.id}.'
-    ))
+        f'from chat {message.chat.id}.'))
     is_error, display_photos = s.proceccing_display_photos(
-        message.chat.id, message.text
-    )
+        message.chat.id, message.text)
     if is_error:
         bot.reply_to(message, d.WRONG_DISPLAY_PHOTOS)
     else:
         bot.send_message(
             message.chat.id, 
-            f'{d.SELECT_DISPLAY_PHOTOS}{display_photos}'
-        )
+            f'{d.SELECT_DISPLAY_PHOTOS}{display_photos}',
+            parse_mode='Markdown')
         # show results
         show_results(message)
 
 
 def show_results(message):
+    """Send search results."""
     bot.send_chat_action(message.chat.id, 'typing')
     result_list = s.get_results(message.chat.id)
     logger.debug(f'Search results list contain {len(result_list)} hotels.')
     if len(result_list) == 0:
-        bot.send_message(message.chat.id, d.NO_RESULTS_MESSAGE)
+        bot.send_message(
+            message.chat.id, d.NO_RESULTS_MESSAGE, parse_mode='Markdown')
     else:
         bot.send_message(
             chat_id=message.chat.id, 
@@ -360,6 +377,4 @@ def show_results(message):
                 bot.send_message(
                     chat_id=message.chat.id, 
                     text=description, 
-                    parse_mode='Markdown'
-                )
-    
+                    parse_mode='Markdown')
