@@ -6,32 +6,38 @@ from os import environ
 from telebot.types import ReplyKeyboardMarkup
 
 from app.logger import get_logger
-from app.classes import Session, Hotel
+from app.classes import Session
 from app.database import db
 import app.rapidapi as r
 
 
+# initialize logger
 logger = get_logger(__name__)
 
 session = Session()
 
 
 def create_session(chat_id: str, command: str) -> bool:
+    """
+    Create session for chat_id.
+    Return True if ok, else return False.
+    """
     result = session.create(chat_id, command)
-    logger.info(f'Session: {session}')
+    logger.debug(f'Session: {session}')
     return result
 
 
-def proceccing_town_id(chat_id: str, town_name: str):
+def proceccing_town_id(chat_id: str, town_name: str) -> set:
     """
     Get town_id by town_name and save it in session.
     Return 
         is_error: bool, 
         result_town: str, 
         markup: ReplyKeyboardMarkup | None
-        next_step: str
+        next_step: str TODO: перенести в CheckOutDate
     """
-    logger.info(f'Running get_town_id(chat_id={chat_id}, town_name={town_name})')
+    logger.info(
+        f'Running get_town_id(chat_id={chat_id}, town_name={town_name})')
     is_error = False
     result_town = str()
     next_step = str()
@@ -58,17 +64,19 @@ def proceccing_town_id(chat_id: str, town_name: str):
         town_id = town_id_result[0]['destinationId']
         markup = None
         result_town = town_id_result[0]['caption']
-        if not session.update(chat_id=chat_id, attr='town_id', value=str(town_id)):
+        if not session.update(
+            chat_id=chat_id, attr='town_id', value=str(town_id)):
             is_error = True # unknown error
         else:
             command = session._session_dist[chat_id]._command
-            print(command)
+            # TODO: перенести в CheckOutDate
             if command == '/bestdeal':
                 next_step = 'min_price'
             else:
                 next_step = 'results_num'
     elif len(town_id_result) > 1:
         # more then 1 result
+        # TODO: сравнение результатов с первыми 64 символами
         logger.info(f'get_town_id({town_name}): generate keyboard.')
         # generate markup keyboard
         markup = ReplyKeyboardMarkup(one_time_keyboard=True)
@@ -76,7 +84,7 @@ def proceccing_town_id(chat_id: str, town_name: str):
         for _i in range(markup.row_width):
             caption = town_id_result[_i]['caption'][:64]
             markup.add(caption)
-            logger.info(f'Markup: add [{caption}] to keyboard.')
+            logger.debug(f'Markup: add [{caption}] to keyboard.')
     else:
         # unknown error
         logger.error(f'get_town_id({town_name}): Unknown error.')
@@ -84,14 +92,13 @@ def proceccing_town_id(chat_id: str, town_name: str):
         markup = None
     
     logger.info((
-        f'Result get_town_id: is_error [{is_error}], '
-        f'result_town [{result_town}], '
-        f'markup [{markup}].'
-    ))
+        f'Result get_town_id: is_error={is_error}, '
+        f'result_town={result_town}, '
+        f'markup={markup}.'))
     return is_error, result_town, markup, next_step
 
 
-def proceccing_results_num(chat_id: str, results_num: str):
+def proceccing_results_num(chat_id: str, results_num: str) -> set:
     """
     Get results_num and save it in sesstion.
     Return
@@ -99,8 +106,8 @@ def proceccing_results_num(chat_id: str, results_num: str):
         is_error: bool,
         num_results: str | None
     """
-    user_error = False
-    is_error = False
+    user_error = False # not int
+    is_error = False # UserQuery update error
     num_results = None
     try:
         results_num = int(results_num)
@@ -120,8 +127,9 @@ def proceccing_results_num(chat_id: str, results_num: str):
     return user_error, is_error, num_results
 
 
-def proceccing_display_photos(chat_id: str, display_photos: str):
+def proceccing_display_photos(chat_id: str, display_photos: str) -> set:
     """
+    Get display_photos and save it in session.
     Return
         is_error: bool,
         display_photos: str
@@ -134,7 +142,13 @@ def proceccing_display_photos(chat_id: str, display_photos: str):
     return is_error, display_photos
 
 
-def process_int_values(chat_id: str, key: str, value: str):
+def process_int_values(chat_id: str, key: str, value: str) -> set:
+    """
+    Get min_price|max_price|min_distance|max_distance and save it in session.
+    Return:
+        user_error - if value not int
+        is_error - if UserQuery update error.
+    """
     user_error = False
     is_error = False
     try:
@@ -149,10 +163,17 @@ def process_int_values(chat_id: str, key: str, value: str):
 
 
 def get_results(chat_id: str) -> list:
+    """
+    Generate list of search results.
+    List contains dict(keys: description, photos).
+    Return empty list if error.
+    """
+    logger.debug(f'get_results(chat_id={chat_id}) start.')
     result = list()
     user_session = session.get_session_dict(chat_id)
     user_session_id = db.insert_session(user_session)
     if not user_session_id:
+        logger.debug('get_results error: no session.')
         return result
     else:
         hotels = r.get_hotels_list(user_session)
@@ -190,4 +211,5 @@ def get_results(chat_id: str) -> list:
             result.append(result_dict)
     # clear session
     session.clear(chat_id)
+    logger.debug(f'get_results return {len(result)} results.')
     return result
