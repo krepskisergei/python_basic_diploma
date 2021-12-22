@@ -29,7 +29,7 @@ class UserQuery:
     def _set_town_id(self, town_id: str) -> bool:
         """
         Setter for _town_id.
-        Return True if ok, owerwise return False.
+        Return True if ok, else return False.
         """
         logger.debug(f'UserQuery _set_town_id({town_id}) start.')
         try:
@@ -42,7 +42,7 @@ class UserQuery:
     def _set_min_price(self, min_price: str) -> bool:
         """
         Setter for _min_price.
-        Return True if ok, owerwise return False.
+        Return True if ok, else return False.
         """
         logger.debug(f'UserQuery _set_min_price({min_price}) start.')
         try:
@@ -57,7 +57,7 @@ class UserQuery:
         """
         Setter for _max_price. 
         Change _min_price and _max_price if _max_price < _min_price.
-        Return True if ok, owerwise return False.
+        Return True if ok, else return False.
         """
         logger.debug(f'UserQuery _set_max_price({max_price}) start.')
         try:
@@ -82,7 +82,7 @@ class UserQuery:
     def _set_min_dist(self, min_dist: str) -> bool:
         """
         Setter for _min_distance.
-        Return True if ok, owerwise return False.
+        Return True if ok, else return False.
         """
         logger.debug(f'UserQuery _set_min_dist({min_dist}) start.')
         try:
@@ -97,7 +97,7 @@ class UserQuery:
         """
         Setter for _max_distance.
         Replace _min_distance and _max_distance if _max_distance < _min_distance.
-        Return True if ok, owerwise return False.
+        Return True if ok, else return False.
         """
         try:
             self._max_dist = int(max_dist)
@@ -124,7 +124,7 @@ class UserQuery:
         """
         Setter for _results_num.
         If results_num > MAX_RESULTS set MAX_RESULTS.
-        Return True if ok, owerwise return False.
+        Return True if ok, else return False.
         """
         logger.debug(f'UserQuery _set_results_num({results_num}) start.')
         try:
@@ -141,7 +141,7 @@ class UserQuery:
         """
         Setter for _display_photos.
         By default set _display_photos to False.
-        Return True if ok, owerwise return False.
+        Return True if ok, else return False.
         """
         logger.debug(f'UserQuery _set_display_photos({display_photos}) start.')
         variants = {
@@ -170,7 +170,7 @@ class UserQuery:
     ):
         """
         Update user data in class instance.
-        Return True if ok, owerwise return False.
+        Return True if ok, else return False.
         """
         result = True
         try:
@@ -222,7 +222,7 @@ class UserQuery:
     def dictionary(self) -> dict:
         """
         Return dict with user data if all data is filled.
-        Owerwise return empty dict.
+        If error return empty dict.
         """
         logger.debug('UserQuery dictionary property start.')
         attr_dict = {
@@ -295,7 +295,7 @@ class Session:
         Attributes:
             chat_id - telebot message.chat.id
             command - telebot user command
-        Return True if ok, owerwise return False.
+        Return True if ok, else return False.
         """
         logger.debug(
             f'Session create(chat_id={chat_id}, command={command}) start.')
@@ -312,7 +312,7 @@ class Session:
         Delete dict key and value by chat_id.
         Attributes:
             chat_id - telebot message.chat.id.
-        Return True if ok, owerwise return False.
+        Return True if ok, else return False.
         """
         logger.debug(f'Session clear(chat_id={chat_id}) start.')
         try:
@@ -330,7 +330,7 @@ class Session:
             chat_id - telebot message.chat.id
             attr - keyname to update (town_id | min_price | max_price | min_distance | max_distance | results_num | display_photos)
             value - key value
-        Return True if ok, owerwise return False.
+        Return True if ok, else return False.
         """
         logger.debug((
             f'Session update(chat_id={chat_id}, attr={attr}, '
@@ -394,7 +394,7 @@ class Session:
 class Hotel:
     """Basic class for hotel data."""
     def _set_id(self) -> bool:
-        """Setter for _id. Return True if ok, owerwise return False."""
+        """Setter for _id. Return True if ok, else return False."""
         logger.debug('Hotel _set_id start.')
         try:
             self._id = self._data_dict['id']
@@ -405,7 +405,7 @@ class Hotel:
             return False
     
     def _set_name(self) -> bool:
-        """Setter for _name. Return True if ok, owerwise return False."""
+        """Setter for _name. Return True if ok, else return False."""
         logger.debug('Hotel _set_name start.')
         try:
             self._name = self._data_dict['name']
@@ -416,7 +416,7 @@ class Hotel:
             return False
     
     def _set_address(self) -> bool:
-        """Setter for _address. Return True if ok, owerwise return False."""
+        """Setter for _address. Return True if ok, else return False."""
         logger.debug('Hotel _set_address start.')
         address_list = list()
         try:
@@ -432,7 +432,7 @@ class Hotel:
             return False
 
     def _set_distance(self) -> bool:
-        """Setter for _distance. Return True if ok, owerwise return False."""
+        """Setter for _distance. Return True if ok, else return False."""
         logger.debug('Hotel _set_distance start.')
         try:
             landmarks = self._data_dict['landmarks']
@@ -454,7 +454,7 @@ class Hotel:
             return False
     
     def _set_price(self) -> bool:
-        """Setter for _price. Return True if ok, owerwise return False."""
+        """Setter for _price. Return True if ok, else return False."""
         logger.debug('Hotel _set_price start.')
         try:
             rate_plan = self._data_dict['ratePlan']
@@ -478,7 +478,7 @@ class Hotel:
     def parse(self) -> bool:
         """
         Parse data_dict and set all Hotel parameters.
-        Return True if ok, owerwise return False.
+        Return True if ok, else return False.
         """
         logger.debug('Hotel parse start.')
         return (

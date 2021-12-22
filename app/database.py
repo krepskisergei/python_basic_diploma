@@ -124,7 +124,7 @@ class Database:
             last_row_id - select True if need to return lastrowid
         Return:
             int - lastrowid if last_row_id = True
-            True if all is ok, owerwise - False.
+            True if ok, else return False.
         """
         logger.debug((
             'Database _insert_dict(\n'
@@ -160,7 +160,7 @@ class Database:
         Set town data to database.
         Attributes:
             town_dict: dict with data (keys: name, destinationId, caption(optional))
-        Return True if ok, owerwise return False.
+        Return True if ok, else return False.
         """
         logger.debug(
             f'Database insert_town(town_dict={town_dict}) start.')
@@ -248,7 +248,7 @@ class Database:
         Attributes:
             hotel_id - Database.insert_hotel_and_search_result result
             photos - list of urls
-        Return True if ok, owerwise return False.
+        Return True if ok, else return False.
         """
         logger.debug((
             'Database insert_hotel_photos('
