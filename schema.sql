@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS users_history (
     min_distance INTEGER,
     max_distance INTEGER,
     results_num integer NOT NULL,
-    display_photos INTEGER DEFAULT 0
+    photos_num INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS town_ids (

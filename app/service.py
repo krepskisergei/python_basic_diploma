@@ -10,6 +10,7 @@ from app.logger import get_logger
 from app.classes import Session
 from app.database import db
 import app.rapidapi as r
+from app.dialogs import DISPLAY_PHOTOS_TRUE, DISPLAY_PHOTOS_FALSE
 
 
 # initialize logger
@@ -184,11 +185,24 @@ def proceccing_display_photos(chat_id: str, display_photos: str) -> set:
         display_photos: str
     """
     is_error = False
-    if not session.update(chat_id, 'display_photos', display_photos):
-        is_error = True
-    else:
-        is_error = False
+    display_photos_set = (
+        DISPLAY_PHOTOS_TRUE, DISPLAY_PHOTOS_FALSE
+    )
+    if display_photos in display_photos_set:
+        # is displaing photos
+        if display_photos == DISPLAY_PHOTOS_FALSE:
+            # no display photos
+            display_photos = '0'
+        else:
+            display_photos = ''
+    # photos_num
+    if len(display_photos):
+        if not session.update(chat_id, 'photos_num', display_photos):
+            is_error = True
+        else:
+            is_error = False
     return is_error, display_photos
+
 
 
 def process_int_values(chat_id: str, key: str, value: str) -> set:
@@ -258,8 +272,9 @@ def get_results(chat_id: str) -> list:
             hotel_dict['check_out'] = user_session['check_out']
 
             result_dict['description'] = hotel_dict
-            if user_session['display_photos']:
-                result_dict['photos'] = hotel_photos_list
+            if user_session['photos_num']:
+                result_dict['photos'] = hotel_photos_list[
+                        :user_session['photos_num']]
             else:
                 result_dict['photos'] = list()
             result.append(result_dict)

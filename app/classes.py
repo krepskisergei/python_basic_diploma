@@ -5,7 +5,6 @@ Basic classes for app.
 from os import environ
 from datetime import datetime
 
-from app.dialogs import DISPLAY_PHOTOS_TRUE, DISPLAY_PHOTOS_FALSE
 from app.logger import get_logger
 
 
@@ -156,26 +155,22 @@ class UserQuery:
             logger.error(f'UserQuery _set_results_num error: {e}.')
             return False
     
-    def _set_display_photos(self, display_photos: str) -> bool:
+    def _set_photos_num(self, photos_num: str) -> bool:
         """
-        Setter for _display_photos.
-        By default set _display_photos to False.
+        Setter for _photos_num.
+        If photos_num > MAX_PHOTOS set MAX_PHOTOS.
         Return True if ok, else return False.
         """
-        logger.debug(f'UserQuery _set_display_photos({display_photos}) start.')
-        variants = {
-            DISPLAY_PHOTOS_TRUE.lower(): True,
-            DISPLAY_PHOTOS_FALSE.lower(): False,
-        }
+        logger.debug(f'UserQuery _set_photos_num({photos_num}) start.')
         try:
-            self._display_photos = variants[display_photos.lower()]
+            self._photos_num = int(photos_num)
+            if self._photos_num > int(environ.get('MAX_PHOTOS')):
+                self._photos_num = int(environ.get('MAX_PHOTOS'))
             logger.info(
-                f'UserQuery _set_display_photos [{self._display_photos}].'
-            )
+                f'UserQuery _set_photos_num [{self._photos_num}].')
             return True
-        except KeyError as e:
-            self._display_photos = False
-            logger.error(f'UserQuery _set_display_photos error: {e}')
+        except ValueError as e:
+            logger.error(f'UserQuery _set_photos_num error: {e}')
             return False
 
     def update(self,
@@ -187,7 +182,7 @@ class UserQuery:
         min_dist: str='',
         max_dist: str='',
         results_num: str='',
-        display_photos: str=''
+        photos_num: str=''
     ):
         """
         Update user data in class instance.
@@ -228,11 +223,11 @@ class UserQuery:
                     f'UserQuery update _results_num({results_num}) start.')
                 if self._set_results_num(results_num) == False:
                     result = False
-            if len(display_photos) > 0:
+            if len(photos_num) > 0:
                 logger.debug((
-                    f'UserQuery update _display_photos({display_photos}) '
+                    f'UserQuery update _photos_num({photos_num}) '
                     'start.'))
-                if self._set_display_photos(display_photos) == False:
+                if self._set_photos_num(photos_num) == False:
                     result = False
             return result
         except Exception as e:
@@ -261,7 +256,7 @@ class UserQuery:
                 'check_in': '_check_in',
                 'check_out': '_check_out', 
                 'results_num': '_results_num', 
-                'display_photos': '_display_photos',
+                'photos_num': '_photos_num',
             },
             '/highprice': {
                 'command': 'command',
@@ -269,7 +264,7 @@ class UserQuery:
                 'check_in': '_check_in',
                 'check_out': '_check_out', 
                 'results_num': '_results_num', 
-                'display_photos': '_display_photos',
+                'photos_num': '_photos_num',
             },
             '/bestdeal': {
                 'command': 'command',
@@ -281,7 +276,7 @@ class UserQuery:
                 'min_distance': '_min_dist', 
                 'max_distance': '_max_dist', 
                 'results_num': '_results_num', 
-                'display_photos': '_display_photos'
+                'photos_num': '_photos_num',
             },
         }
         result = dict()
@@ -363,7 +358,7 @@ class Session:
         Update data in session by chat_id.
         Attributes:
             chat_id - telebot message.chat.id
-            attr - keyname to update (town_id | min_price | max_price | min_distance | max_distance | results_num | display_photos)
+            attr - keyname to update (town_id | min_price | max_price | min_distance | max_distance | results_num | photos_num)
             value - key value
         Return True if ok, else return False.
         """
@@ -379,7 +374,7 @@ class Session:
             'min_distance',
             'max_distance',
             'results_num',
-            'display_photos',
+            'photos_num'
         )
         if chat_id not in self._session_dist.keys():
             logger.error(f'Session update error: no session for [{chat_id}].')
@@ -407,10 +402,8 @@ class Session:
                 result = self._session_dist[chat_id].update(max_dist=value)
             case 'results_num':
                 result = self._session_dist[chat_id].update(results_num=value)
-            case 'display_photos':
-                result = self._session_dist[chat_id].update(
-                    display_photos=value
-                )
+            case 'photos_num':
+                result = self._session_dist[chat_id].update(photos_num=value)
         logger.debug(f'Session update return {result}.')
         return result
     

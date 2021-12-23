@@ -431,9 +431,40 @@ def next_handler_ask_display_photos(message):
     if is_error:
         bot.reply_to(message, d.WRONG_DISPLAY_PHOTOS)
     else:
+        if len(display_photos):
+            # show results
+            show_results(message)
+        else:
+            next_handler_pre_ask_photos_num(message)
+
+
+
+def next_handler_pre_ask_photos_num(message):
+    """
+    Send GET_PHOTOS_NUM message and register ask_photos_num next handler.
+    """
+    logger.info((
+        f'[{message.text}] run [next_handler_pre_ask_photos_num] '
+        f'from chat {message.chat.id}.'))
+    msg = bot.send_message(
+        message.chat.id, d.GET_PHOTOS_NUM_MESSAGE , parse_mode='Markdown')
+    bot.register_next_step_handler(msg, next_handler_ask_photos_num)
+
+
+def next_handler_ask_photos_num(message):
+    """Get photos_num."""
+    logger.info((
+        f'[{message.text}] run [next_handler_ask_photos_num] '
+        f'from chat {message.chat.id}.'))
+    is_error, display_photos = s.proceccing_display_photos(
+        message.chat.id, message.text)
+    if is_error:
+        bot.reply_to(message, d.WRONG_PHOTOS_NUM_MESSAGE)
+        next_handler_pre_ask_photos_num(message)
+    else:
         bot.send_message(
             message.chat.id, 
-            f'{d.SELECT_DISPLAY_PHOTOS}{display_photos}',
+            f'{d.SELECT_PHOTOS_NUM_MESSAGE}{display_photos}', 
             parse_mode='Markdown')
         # show results
         show_results(message)
