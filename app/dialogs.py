@@ -48,7 +48,9 @@ WRONG_DISTANCE = 'Расстояние должно быть целым числ
 
 RESULTS_MESSAGE = '*Найдено отелей:*'
 NO_RESULTS_MESSAGE = 'Поиск не дал результатов. Попробуйте изменить параметры.'
+HOTEL_URL_SCHEMA = 'https://ru.hotels.com/ho[id]/?q-check-in=[check_in]&q-check-out=[check_out]&q-rooms=1&q-room-0-adults=1&q-room-0-children=0'
 HOTEL_DESCRIPTION = """🏨 Отель *[name]*
 🌏 Адрес *[address]*
 🚶‍♂️ *[distance]* от центра
 💰 Цена *[price]*"""
+HOTEL_BOOK_MESSAGE = 'Забронировать'

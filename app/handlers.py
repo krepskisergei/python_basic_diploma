@@ -5,7 +5,8 @@ Contains Telebot and basic handlers
 from os import environ
 from sys import exit
 from telebot import TeleBot
-from telebot.types import ReplyKeyboardMarkup, InputMediaPhoto
+import telebot
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, InputMediaPhoto
 
 import app.dialogs as d
 import app.service as s
@@ -354,27 +355,29 @@ def show_results(message):
             parse_mode='Markdown'
         )
         for result in result_list:
-            bot.send_chat_action(message.chat.id, 'typing')
-            description = d.HOTEL_DESCRIPTION
-            for key, value in result['description'].items():
-                description = description.replace(f'[{key}]', str(value))
-            logger.debug(f'Display hotel: {description}.')
-            if len(result['photos']) > 0:
-                # display photos
-                media = list()
-                for photo in result['photos']:
-                    if len(media) == 0:
-                        media.append(InputMediaPhoto(
-                            media=photo, 
-                            caption=description, 
-                            parse_mode='Markdown'
-                        ))
-                    else:
+            try:
+                bot.send_chat_action(message.chat.id, 'typing')
+                description = d.HOTEL_DESCRIPTION
+                url = d.HOTEL_URL_SCHEMA
+                for key, value in result['description'].items():
+                    description = description.replace(f'[{key}]', str(value))
+                    url = url.replace(f'[{key}]', str(value))
+                markup = InlineKeyboardMarkup()
+                markup.add(InlineKeyboardButton(text=d.HOTEL_BOOK_MESSAGE, url=url))
+                logger.debug(f'Display hotel: {description}.')
+                if len(result['photos']) > 0:
+                    # send hotel photos
+                    media = list()
+                    for photo in result['photos']:
                         media.append(InputMediaPhoto(media=photo))
-                bot.send_media_group(message.chat.id, media)
-            else:
-                # do not display photos
+                    bot.send_media_group(
+                        chat_id=message.chat.id, media=media)
+                # send hotel description
                 bot.send_message(
                     chat_id=message.chat.id, 
                     text=description, 
-                    parse_mode='Markdown')
+                    parse_mode='Markdown',
+                    reply_markup=markup)
+            except Exception as e:
+                logger.error(f'show_results error: {e}.')
+                next

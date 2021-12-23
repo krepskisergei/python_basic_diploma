@@ -172,6 +172,10 @@ def get_results(chat_id: str) -> list:
     result = list()
     user_session = session.get_session_dict(chat_id)
     user_session_id = db.insert_session(user_session)
+    # get checkIn and ckeckOut
+    # TODO: get checkIn and CheckOut from session
+    check_in_date = '2021-12-24'
+    check_out_date = '2021-12-25'
     if not user_session_id:
         logger.debug('get_results error: no session.')
         return result
@@ -203,6 +207,9 @@ def get_results(chat_id: str) -> list:
                 )
             # generate hotel description dict
             hotel_dict['price'] = hotel_price
+            # add checkIn and checkOut
+            hotel_dict['check_in'] = check_in_date
+            hotel_dict['check_out'] = check_out_date
             result_dict['description'] = hotel_dict
             if user_session['display_photos']:
                 result_dict['photos'] = hotel_photos_list
