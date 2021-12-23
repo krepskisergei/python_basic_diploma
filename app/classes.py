@@ -3,6 +3,7 @@
 Basic classes for app.
 """
 from os import environ
+from datetime import datetime
 
 from app.dialogs import DISPLAY_PHOTOS_TRUE, DISPLAY_PHOTOS_FALSE
 from app.logger import get_logger
@@ -27,10 +28,7 @@ class UserQuery:
         logger.info(f'UserQuery entity created by command {command}.')
     
     def _set_town_id(self, town_id: str) -> bool:
-        """
-        Setter for _town_id.
-        Return True if ok, else return False.
-        """
+        """Setter for _town_id. Return True if ok, else return False."""
         logger.debug(f'UserQuery _set_town_id({town_id}) start.')
         try:
             self._town_id: int = int(town_id)
@@ -39,11 +37,32 @@ class UserQuery:
             logger.error(f'UserQuery _set_town_id error: {e}.')
             return False
     
+    def _set_check_in(self, check_in: str) -> bool:
+        """Setter for _check_in. Return True if ok, else return False."""
+        logger.debug(f'UserQuery _set_check_in({check_in}) start.')
+        try:
+            datetime.strptime(check_in, '%Y-%m-%d')
+            self._check_in = check_in
+            return True
+        except ValueError as e:
+            logger.error(f'UserQuery _set_check_in error: {e}.')
+            return False
+    
+
+    def _set_check_out(self, check_out: str) -> bool:
+        """Setter for _check_out. Return True if ok, else return False."""
+        logger.debug(f'UserQuery _set_check_out({check_out}) start.')
+        try:
+            datetime.strptime(check_out, '%Y-%m-%d')
+            self._check_out = check_out
+            return True
+        except ValueError as e:
+            logger.error(f'UserQuery _set_check_out error: {e}.')
+            return False
+
+    
     def _set_min_price(self, min_price: str) -> bool:
-        """
-        Setter for _min_price.
-        Return True if ok, else return False.
-        """
+        """Setter for _min_price. Return True if ok, else return False."""
         logger.debug(f'UserQuery _set_min_price({min_price}) start.')
         try:
             self._min_price = int(min_price)
@@ -161,6 +180,8 @@ class UserQuery:
 
     def update(self,
         town_id: str='',
+        check_in: str='',
+        check_out: str='',
         min_price: str='',
         max_price: str='',
         min_dist: str='',
@@ -177,6 +198,14 @@ class UserQuery:
             if len(town_id) > 0:
                 logger.debug(f'UserQuery update _town_id({town_id}) start.')
                 if self._set_town_id(town_id) == False:
+                    result = False
+            if len(check_in) > 0:
+                logger.debug(f'UserQuery update _check_in({check_in}) start.')
+                if self._set_check_in(check_in) == False:
+                    result = False
+            if len(check_out) > 0:
+                logger.debug(f'UserQuery update _check_out({check_out}) start.')
+                if self._set_check_out(check_out) == False:
                     result = False
             if len(min_price) > 0:
                 logger.debug(f'UserQuery update _min_price({min_price}) start.')
@@ -229,18 +258,24 @@ class UserQuery:
             '/lowprice': {
                 'command': 'command',
                 'town_id': '_town_id', 
+                'check_in': '_check_in',
+                'check_out': '_check_out', 
                 'results_num': '_results_num', 
                 'display_photos': '_display_photos',
             },
             '/highprice': {
                 'command': 'command',
                 'town_id': '_town_id', 
+                'check_in': '_check_in',
+                'check_out': '_check_out', 
                 'results_num': '_results_num', 
                 'display_photos': '_display_photos',
             },
             '/bestdeal': {
                 'command': 'command',
                 'town_id': '_town_id', 
+                'check_in': '_check_in',
+                'check_out': '_check_out', 
                 'min_price': '_min_price', 
                 'max_price': '_max_price', 
                 'min_distance': '_min_dist', 
@@ -337,6 +372,8 @@ class Session:
             f'value={value}) started.'))
         attr_set = (
             'town_id',
+            'check_in',
+            'check_out',
             'min_price',
             'max_price',
             'min_distance',
@@ -356,6 +393,10 @@ class Session:
         match attr:
             case 'town_id':
                 result = self._session_dist[chat_id].update(town_id=value)
+            case 'check_in':
+                result = self._session_dist[chat_id].update(check_in=value)
+            case 'check_out':
+                result = self._session_dist[chat_id].update(check_out=value)
             case 'min_price':
                 result = self._session_dist[chat_id].update(min_price=value)
             case 'max_price':

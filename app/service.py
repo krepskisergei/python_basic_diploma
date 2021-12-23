@@ -4,6 +4,7 @@ Contain all system functions (bussiness logic)
 """
 from os import environ
 from telebot.types import ReplyKeyboardMarkup
+from datetime import datetime, timedelta
 
 from app.logger import get_logger
 from app.classes import Session
@@ -13,7 +14,7 @@ import app.rapidapi as r
 
 # initialize logger
 logger = get_logger(__name__)
-
+# create session
 session = Session()
 
 
@@ -27,6 +28,24 @@ def create_session(chat_id: str, command: str) -> bool:
     return result
 
 
+def get_check_out_min_date(chat_id: str) -> str:
+    """
+    Get check_in date from session and return +1 day str.
+    Return empty str if no check_in.
+    """
+    logger.debug(f'get_check_out_min_date(chat_id={chat_id}) start.')
+    try:
+        check_in = session._session_dist[chat_id]._check_in
+        date_check_in = datetime.strptime(check_in, '%Y-%m-%d')
+        date_check_out = date_check_in + timedelta(days=1)
+        result = str(date_check_out.date())
+        logger.debug(f'get_checl_out_min_date return {result}.')
+        return result
+    except Exception as e:
+        logger.error(f'get_check_out_min_date error: {e}.')
+        return str()
+
+
 def proceccing_town_id(chat_id: str, town_name: str) -> set:
     """
     Get town_id by town_name and save it in session.
@@ -34,7 +53,6 @@ def proceccing_town_id(chat_id: str, town_name: str) -> set:
         is_error: bool, 
         result_town: str, 
         markup: ReplyKeyboardMarkup | None
-        next_step: str TODO: перенести в CheckOutDate
     """
     logger.info(
         f'Running get_town_id(chat_id={chat_id}, town_name={town_name})')
@@ -67,24 +85,31 @@ def proceccing_town_id(chat_id: str, town_name: str) -> set:
         if not session.update(
             chat_id=chat_id, attr='town_id', value=str(town_id)):
             is_error = True # unknown error
-        else:
-            command = session._session_dist[chat_id]._command
-            # TODO: перенести в CheckOutDate
-            if command == '/bestdeal':
-                next_step = 'min_price'
-            else:
-                next_step = 'results_num'
     elif len(town_id_result) > 1:
         # more then 1 result
-        # TODO: сравнение результатов с первыми 64 символами
-        logger.info(f'get_town_id({town_name}): generate keyboard.')
-        # generate markup keyboard
-        markup = ReplyKeyboardMarkup(one_time_keyboard=True)
-        markup.row_width = min(len(town_id_result), 3)
-        for _i in range(markup.row_width):
-            caption = town_id_result[_i]['caption'][:64]
-            markup.add(caption)
-            logger.debug(f'Markup: add [{caption}] to keyboard.')
+        # compare first 64 chars
+        find_in_list = False
+        for _town in town_id_result:
+            if town_name == _town['caption'][:64]:
+                # one result
+                town_id = _town['destinationId']
+                markup = None
+                result_town = _town['caption']
+                find_in_list = True
+                if not session.update(
+                    chat_id=chat_id, attr='town_id', value=str(town_id)):
+                    is_error = True # unknown error
+                break
+        
+        if not find_in_list:
+            logger.info(f'get_town_id({town_name}): generate keyboard.')
+            # generate markup keyboard
+            markup = ReplyKeyboardMarkup(one_time_keyboard=True)
+            markup.row_width = min(len(town_id_result), 3)
+            for _i in range(markup.row_width):
+                caption = town_id_result[_i]['caption'][:64]
+                markup.add(caption)
+                logger.debug(f'Markup: add [{caption}] to keyboard.')
     else:
         # unknown error
         logger.error(f'get_town_id({town_name}): Unknown error.')
@@ -98,9 +123,33 @@ def proceccing_town_id(chat_id: str, town_name: str) -> set:
     return is_error, result_town, markup, next_step
 
 
+def proceccing_check_in_date(chat_id: str, check_in: str) -> bool:
+    """
+    Get check_in and seve it in session.
+    Return True if ok, else return False
+    """
+    return session.update(chat_id, 'check_in', check_in)
+
+
+def proceccing_check_out_date(chat_id: str, check_out: str) -> set:
+    """
+    Get check_out and save it in session, choose next_step by command.
+    Return:
+        session_update: bool
+        next_step: str
+    """
+    session_update = session.update(chat_id, 'check_out', check_out)
+    command = session._session_dist[chat_id]._command
+    if command == '/bestdeal':
+        next_step = 'min_price'
+    else:
+        next_step = 'results_num'
+    return session_update, next_step
+
+
 def proceccing_results_num(chat_id: str, results_num: str) -> set:
     """
-    Get results_num and save it in sesstion.
+    Get results_num and save it in session.
     Return
         user_error: bool,
         is_error: bool,
@@ -172,10 +221,7 @@ def get_results(chat_id: str) -> list:
     result = list()
     user_session = session.get_session_dict(chat_id)
     user_session_id = db.insert_session(user_session)
-    # get checkIn and ckeckOut
-    # TODO: get checkIn and CheckOut from session
-    check_in_date = '2021-12-24'
-    check_out_date = '2021-12-25'
+    
     if not user_session_id:
         logger.debug('get_results error: no session.')
         return result
@@ -207,9 +253,10 @@ def get_results(chat_id: str) -> list:
                 )
             # generate hotel description dict
             hotel_dict['price'] = hotel_price
-            # add checkIn and checkOut
-            hotel_dict['check_in'] = check_in_date
-            hotel_dict['check_out'] = check_out_date
+            # add check_in and check_out dates to hotel url
+            hotel_dict['check_in'] = user_session['check_in']
+            hotel_dict['check_out'] = user_session['check_out']
+
             result_dict['description'] = hotel_dict
             if user_session['display_photos']:
                 result_dict['photos'] = hotel_photos_list

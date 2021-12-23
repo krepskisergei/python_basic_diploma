@@ -5,8 +5,13 @@ Contains Telebot and basic handlers
 from os import environ
 from sys import exit
 from telebot import TeleBot
-import telebot
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, InputMediaPhoto
+from telebot.types import InlineKeyboardButton
+from telebot.types import InlineKeyboardMarkup
+from telebot.types import ReplyKeyboardMarkup
+from telebot.types import InputMediaPhoto
+from telegram_bot_calendar import WMonthTelegramCalendar
+from telegram_bot_calendar import LSTEP
+from datetime import datetime
 
 import app.dialogs as d
 import app.service as s
@@ -119,12 +124,8 @@ def next_handler_ask_town(message) -> None:
                 message.chat.id, 
                 f'{d.TOWN_SELECTED_MESSAGE}{return_town}', 
                 parse_mode='Markdown')
-            # TODO: перенести выбор next_handler на выбор CheckOut
             # next handler
-            if next_step == 'results_num':
-                next_handler_pre_ask_results_num(message)
-            elif next_step == 'min_price':
-                next_handler_pre_ask_min_price(message)
+            next_handler_pre_ask_check_in(message)
         else:
             if not markup:
                 bot.send_message(
@@ -141,12 +142,110 @@ def next_handler_ask_town(message) -> None:
                 bot.register_next_step_handler(msg, next_handler_ask_town)
 
 
+def next_handler_pre_ask_check_in(message):
+    """Send GET_CHECK_IN message, generate calendar keyboard"""
+    logger.info((
+        f'[{message.text}] run [next_handler_pre_ask_check_in] '
+        f'from chat {message.chat.id}.'))
+    min_date = datetime.now().date()
+    calendar, step = WMonthTelegramCalendar(
+        calendar_id=0, 
+        current_date=min_date, 
+        min_date=min_date, 
+        locale='ru').build()
+    bot.send_message(
+        message.chat.id, 
+        f'{d.GET_CHECK_IN_MESSAGE} {LSTEP[step]}', 
+        reply_markup=calendar)
+
+
+@bot.callback_query_handler(func=WMonthTelegramCalendar.func(calendar_id=0))
+def next_handler_ask_check_in(callback):
+    """Callback function to get check_in date."""
+    logger.debug('next_handler_ask_check_in start.')
+    min_date = datetime.now().date()
+    result, key, step = WMonthTelegramCalendar(
+        calendar_id=0,
+        current_date=min_date,
+        min_date=min_date, 
+        locale='ru').process(callback.data)
+    if not result and key:
+        bot.edit_message_text(
+            f'{d.GET_CHECK_IN_MESSAGE} {LSTEP[step]}', 
+            callback.message.chat.id, 
+            callback.message.message_id, 
+            reply_markup=key)
+    elif result:
+        if s.proceccing_check_in_date(callback.message.chat.id, str(result)):
+            # next step
+            next_handler_pre_ask_check_out(callback.message)
+        else:
+            bot.reply_to(callback.message, d.UNKNOWN_ERROR_MESSAGE)
+            next_handler_pre_ask_check_in(callback.message)
+
+
+def next_handler_pre_ask_check_out(message):
+    """Send GET_CHECK_OUT message, generate calendar keyboard"""
+    logger.info((
+        f'[{message.text}] run [next_handler_pre_ask_check_out] '
+        f'from chat {message.chat.id}.'))
+    str_min_date = s.get_check_out_min_date(message.chat.id)
+    if str_min_date:
+        min_date = datetime.strptime(str_min_date, '%Y-%m-%d').date()
+    else:
+        min_date = datetime.now().date()
+    
+    calendar, step = WMonthTelegramCalendar(
+        calendar_id=1, 
+        current_date=min_date, 
+        min_date=min_date, 
+        locale='ru').build()
+    bot.send_message(
+        message.chat.id, 
+        f'{d.GET_CHECK_OUT_MESSAGE} {LSTEP[step]}', 
+        reply_markup=calendar)
+
+
+@bot.callback_query_handler(func=WMonthTelegramCalendar.func(calendar_id=1))
+def next_handler_ask_check_out(callback):
+    """Callback function to get check_out date."""
+    logger.debug('next_handler_ask_check_out start.')
+    str_min_date = s.get_check_out_min_date(callback.message.chat.id)
+    if str_min_date:
+        min_date = datetime.strptime(str_min_date, '%Y-%m-%d').date()
+    else:
+        min_date = datetime.now().date()
+    
+    result, key, step = WMonthTelegramCalendar(
+        calendar_id=1,
+        current_date=min_date,
+        min_date=min_date, 
+        locale='ru').process(callback.data)
+    if not result and key:
+        bot.edit_message_text(
+            f'{d.GET_CHECK_OUT_MESSAGE} {LSTEP[step]}', 
+            callback.message.chat.id, 
+            callback.message.message_id, 
+            reply_markup=key)
+    elif result:
+        session_update, next_step = s.proceccing_check_out_date(
+            callback.message.chat.id, str(result))
+        if session_update:
+            # next handler
+            if next_step == 'results_num':
+                next_handler_pre_ask_results_num(callback.message)
+            elif next_step == 'min_price':
+                next_handler_pre_ask_min_price(callback.message)
+        else:
+            bot.reply_to(callback.message, d.UNKNOWN_ERROR_MESSAGE)
+            next_handler_pre_ask_check_in(callback.message)
+
+
 def next_handler_pre_ask_min_price(message):
     """Send GET_MIN_PRICE message and register ask_min_price next handler."""
     logger.info((
         f'[{message.text}] run [next_handler_pre_ask_min_price] '
-        f'from chat {message.chat.id}.'
-    ))
+        f'from chat {message.chat.id}.'))
     msg = bot.send_message(
         message.chat.id, d.GET_MIN_PRICE, parse_mode='Markdown')
     bot.register_next_step_handler(msg, next_handler_ask_min_price)

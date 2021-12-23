@@ -4,6 +4,8 @@ CREATE TABLE IF NOT EXISTS users_history (
     chat_id INTEGER NOT NULL,
     command TEXT NOT NULL,
     town_id INTEGER NOT NULL,
+    check_in TEXT,
+    check_out TEXT
     min_price INTEGER,
     max_price INTEGER,
     min_distance INTEGER,

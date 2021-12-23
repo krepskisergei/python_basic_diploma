@@ -28,6 +28,9 @@ WRONG_TOWN_MESSAGE = 'Я не знаю такого города. Попробу
 TOWN_SELECTED_MESSAGE = 'Выбран город '
 SELECT_TOWN_MESSAGE = 'Выберите нужный город или уточните запрос.'
 
+GET_CHECK_IN_MESSAGE = 'День заезда'
+GET_CHECK_OUT_MESSAGE = 'День выезда'
+
 GET_RESULTS_NUM_MESSAGE = f'*Введите требуемое количество результатов* (1 - {environ.get("MAX_RESULTS")}):'
 WRONG_RESULTS_NUM_MESSAGE = 'Количество должно быть числом.'
 SELECT_RESULTS_NUM_MESSAGE = 'Количество результатов '

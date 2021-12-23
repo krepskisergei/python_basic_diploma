@@ -3,7 +3,6 @@ from requests import request
 import json
 from os import environ
 from sys import exit
-from datetime import datetime, timedelta
 from app.classes import Hotel
 
 from app.logger import get_logger
@@ -97,12 +96,6 @@ def get_hotels_list(user_query_dict: dict) -> list:
     result = list()
     url = 'https://hotels4.p.rapidapi.com/properties/list'
 
-    # get current date
-    td = datetime.now()
-    tm = td + timedelta(days=1)
-    td = td.strftime('%Y-%m-%d')
-    tm = tm.strftime('%Y-%m-%d')
-
     # get page numbers
     results_num = user_query_dict['results_num']
     max_page_results = 25
@@ -120,8 +113,8 @@ def get_hotels_list(user_query_dict: dict) -> list:
     querystring = {
         'destinationId': str(user_query_dict['town_id']),
         'pageSize': page_size,
-        'checkIn': td,
-        'checkOut': tm,
+        'checkIn': user_query_dict['check_in'],
+        'checkOut': user_query_dict['check_out'],
         'adults1': '1',
         'locale': rapidapi_locale,
         'currency': rapiapi_currency
