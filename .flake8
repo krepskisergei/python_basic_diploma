@@ -1,0 +1,9 @@
+[flake8]
+exclude = 
+    .git, 
+    __pychache__,
+    venv,
+    .venv,
+    *.log,
+    .vscode,
+    .gilab-ciflake8
