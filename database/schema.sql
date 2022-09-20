@@ -42,6 +42,7 @@ CREATE TABLE "hotels"(
 CREATE TABLE "photos"(
     "imageId" INTEGER NOT NULL,
     "hotelId" INTEGER NOT NULL,
+    "baseUrl" TEXT NOT NULL,
     PRIMARY KEY("imageId"),
     FOREIGN KEY("hotelId") REFERENCES "hotels"("id") 
         ON UPDATE CASCADE 
