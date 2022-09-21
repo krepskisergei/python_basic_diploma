@@ -23,13 +23,13 @@ class _AppLogger(logging.Logger):
         super().__init__(name, level)
         # create additional handlers
         fn_handler = logging.FileHandler(self._LOG_FN, encoding='utf-8')
-        fn_handler.setFormatter(self._LOG_FORMAT)
+        fn_handler.setFormatter(logging.Formatter(self._LOG_FORMAT))
         fn_handler.setLevel(fn_level)
         self.addHandler(fn_handler)
         self.io_level = io_level
         if io_level:
             io_handler = logging.StreamHandler()
-            io_handler.setFormatter(self._LOG_FORMAT)
+            io_handler.setFormatter(logging.Formatter(self._LOG_FORMAT))
             io_handler.setLevel(io_level)
             self.addHandler(io_handler)
 

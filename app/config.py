@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 def load_env(fn: str = '.env', override: bool = False) -> bool:
     """Return environment loading status from file fn."""
-    fn_path = path.join(getcwd, fn)
+    fn_path = path.join(getcwd(), fn)
     if not path.exists(fn_path):
         raise EnvironmentError(f'Environment file [{fn_path}] not exists.')
     return load_dotenv(fn_path, override=override, verbose=True)
@@ -23,7 +23,7 @@ def load_var(name: str, default_value: str = None) -> str:
     raise EnvironmentError(f'Environment variable [{name}] value error.')
 
 
-APP_DEBUG = ''
+APP_DEBUG = True
 # Database
 DB_ENGINE = load_var('DATABASE_ENGINE')
 # Telegram
