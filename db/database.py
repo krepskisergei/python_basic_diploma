@@ -1,5 +1,6 @@
 from app.logger import get_logger
 from classes.base import Hotel, Location, Photo
+from classes.history import History
 from db.base import SqliteDatabase
 
 
@@ -117,3 +118,82 @@ class Database(SqliteDatabase):
         if len(photos) == 0:
             return []
         return [Photo(**x) for x in photos]
+
+    @logger.debug_func
+    def get_current_history(self, chat_id: int) -> History:
+        """Return active history by chat_id."""
+        query = (
+            'SELECT * FROM history '
+            'WHERE chatId = ? AND complete IS FALSE'
+        )
+        try:
+            history_data = self._select_one(query, [chat_id], {})
+        except self.DBError:
+            return None
+        if history_data is None:
+            return None
+        history = History(chat_id)
+        history.set_attributes(history_data)
+        return History
+
+    @logger.debug_func
+    def get_all_history(self, chat_id: int) -> list[History]:
+        """Return list of all user histories by chat_id."""
+        query = (
+            'SELECT * FROM history '
+            'WHERE chatId = ? AND complete IS TRUE'
+        )
+        try:
+            history_data = self._select_all(query, [chat_id], {})
+        except self.DBError:
+            return []
+        if history_data is None:
+            return []
+        histories = []
+        for data in history_data:
+            history = History(chat_id)
+            history.set_attributes(data)
+            histories.append(history)
+        return histories
+
+    @logger.debug_func
+    def add_history(self, history: History) -> History:
+        """Add new history."""
+        try:
+            history.__getattribute__('chatId')
+            history.__getattribute__('command')
+        except AttributeError:
+            return None
+        query = (
+            'INSERT INTO history(chatId, command) '
+            'VALUES (?, ?)'
+        )
+        try:
+            self._update(query, [history.chatId, history.command])
+        except self.DBError:
+            return None
+        return self.get_current_history(history.chatId)
+
+    @logger.debug_func
+    def update_history(self, history: History, update_attrs: dict) -> History:
+        """Update history data from update_attrs dict."""
+        try:
+            history.__getattribute__('id')
+        except AttributeError:
+            return None
+        columns = []
+        values = []
+        for key, value in update_attrs.items():
+            columns.append(f'{key} = ?')
+            values.append(value)
+        query = (
+            'UPDATE history SET '
+            f"{', '.join(columns)} "
+            'WHERE id = ?'
+        )
+        values.append(history.id)
+        try:
+            self._update(query, values)
+        except self.DBError:
+            return None
+        return self.get_current_history(history.chatId)

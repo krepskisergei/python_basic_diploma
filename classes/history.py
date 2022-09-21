@@ -83,7 +83,7 @@ class History:
             try:
                 attr_type = self.attrs.get(attr_name, None)
                 if attr_type is not None:
-                    if isinstance(value, attr_type):
+                    if value is not None and isinstance(value, attr_type):
                         self.__setattr__(attr_name, value)
                         if f'_check_{attr_name}' in self._func_list:
                             try:
@@ -95,8 +95,11 @@ class History:
                                 return False
                         return True
                     else:
-                        raise HistoryValueError(
-                            f'Attribute [{attr_name}] value [{value}] error.')
+                        if value is not None:
+                            raise HistoryValueError(
+                                f'Attribute [{attr_name}] value '
+                                f'[{value}] error.'
+                            )
                 else:
                     raise HistoryValueError(
                         f'Attribute name error [{attr_name}].')
