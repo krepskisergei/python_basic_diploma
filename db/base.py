@@ -66,6 +66,7 @@ class SqliteDatabase:
         Create database connection by engine.
         """
         self._engine = engine
+        self._connect()
 
     def _connect(self) -> None:
         """Add connection."""
@@ -75,11 +76,14 @@ class SqliteDatabase:
             create_db = True
         try:
             self._connection = sqlite3.connect(
-                db_path, detect_types=sqlite3.PARSE_DECLTYPES)
+                db_path,
+                detect_types=sqlite3.PARSE_DECLTYPES,
+                check_same_thread=False
+            )
         except sqlite3.Error as e:
             raise self.DBConnectionError(str(e))
         if create_db:
-            pass
+            self._create_db()
 
     def _create_db(self) -> None:
         """Create db structure from schema.sql file."""
@@ -135,7 +139,7 @@ class SqliteDatabase:
             cursor.close()
         except sqlite3.Error as e:
             cursor.close()
-            self._exception(e)
+            raise self._exception(e)
         return result
 
     @logger.debug_func
@@ -152,7 +156,7 @@ class SqliteDatabase:
             cursor.close()
         except sqlite3.Error as e:
             cursor.close()
-            self._exception(e)
+            raise self._exception(e)
         return result
 
     @logger.debug_func

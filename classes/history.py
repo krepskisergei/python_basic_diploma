@@ -49,7 +49,6 @@ class History:
         return attr
 
     @property
-    @logger.debug_func
     def current_step(self) -> str:
         """Get current step."""
         attr_list = list(self.attrs.keys())

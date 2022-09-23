@@ -18,12 +18,16 @@ def load_var(name: str, default_value: str = None) -> str:
     value = getenv(name)
     if value is not None and len(value) > 0:
         return value
+    if load_env():
+        value = getenv(name)
+        if value is not None and len(value) > 0:
+            return value
     if default_value is not None:
         return default_value
     raise EnvironmentError(f'Environment variable [{name}] value error.')
 
 
-APP_DEBUG = True
+APP_DEBUG = None
 # Database
 DB_ENGINE = load_var('DATABASE_ENGINE')
 # Telegram

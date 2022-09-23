@@ -134,7 +134,7 @@ class Database(SqliteDatabase):
             return None
         history = History(chat_id)
         history.set_attributes(history_data)
-        return History
+        return history
 
     @logger.debug_func
     def get_all_history(self, chat_id: int) -> list[History]:
