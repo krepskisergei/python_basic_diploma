@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import date, timedelta
 from telebot.types import ReplyKeyboardMarkup
 from telebot.types import InlineKeyboardMarkup
 from telegram_bot_calendar import WMonthTelegramCalendar
@@ -66,7 +66,7 @@ def process_command(
             messages = []
             messages.append(process_location_id(h, message))
             if h.current_step == 'checkIn':
-                min_date = datetime.now().date()
+                min_date = date.today()
                 calendar, step = WMonthTelegramCalendar(
                     calendar_id=0,
                     current_date=min_date,
@@ -83,7 +83,7 @@ def process_command(
             messages = []
             messages.append(process_check_in(h, message))
             if h.current_step == 'checkOut':
-                min_date = (h.checkIn + timedelta(days=1)).date()
+                min_date = h.checkIn + timedelta(days=1)
                 calendar, step = WMonthTelegramCalendar(
                     calendar_id=1,
                     current_date=min_date,
@@ -92,11 +92,12 @@ def process_command(
                 ).build()
                 messages.append(
                     MsgKeyboard(
-                        f'{m.CHECK_IN_START_MESSAGE} {LSTEP[step]}',
+                        f'{m.CHECK_IN_START_MESSAGE}',
                         markup=calendar))
                 return (messages, None)
             return (messages, h.current_step)
         case 'checkOut':
+            print('checkOut')
             pass
 
 
@@ -140,10 +141,10 @@ def process_location_id(h: History, location_name: str) -> MsgKeyboard:
         return MsgKeyboard(m.LID_ASK_MESSAGE, markup)
 
 
-def process_check_in(h: History, check_in) -> MsgKeyboard:
+def process_check_in(h: History, check_in: date) -> MsgKeyboard:
     """Process check in date"""
-    dt = datetime(year=check_in.year, month=check_in.month, day=check_in.day)
     update_attrs = h.set_attributes(
-        {'checkIn': dt})
+        {'checkIn': check_in})
     db.update_history(h, update_attrs)
-    return MsgKeyboard(f"{m.CHECK_IN_FINISH_MESSAGE}{dt.strftime('%d.%m.%Y')}")
+    return MsgKeyboard(
+        f"{m.CHECK_IN_FINISH_MESSAGE}{check_in.strftime('%d.%m.%Y')}")

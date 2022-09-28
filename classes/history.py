@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from app.logger import get_logger
 
 
@@ -13,8 +13,8 @@ class History:
         'queryTime': datetime,
         'command': str,
         'locationId': int,
-        'checkIn': datetime,
-        'checkOut': datetime,
+        'checkIn': date,
+        'checkOut': date,
         'priceMin': float,
         'priceMax': float,
         'distanceMin': float,
