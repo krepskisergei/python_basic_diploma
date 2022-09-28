@@ -122,7 +122,7 @@ def process_location_id(h: History, location_name: str) -> MsgKeyboard:
         update_attrs = h.set_attributes(
             {'locationId': location.destinationId})
         db.update_history(h, update_attrs)
-        return MsgKeyboard(f'{m.LID_FINISH_MESSAGE}{location.name}')
+        return MsgKeyboard(f'{m.LID_FINISH_MESSAGE}{location.caption}')
     else:
         # more than one result
         for location in locations_list:

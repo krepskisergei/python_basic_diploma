@@ -8,21 +8,24 @@ class Location:
     geoId: int
     caption: str
     name: str
+    name_lower: str = ''
 
-    def format_caption(self) -> None:
+    def format_data(self) -> None:
         """Remove html tags from caption."""
         self.caption = self.caption.replace(
             "<span class='highlighted'>", ""
         ).replace("</span>", "")
+        self.name_lower = self.name.lower().replace(' ', '').replace('-', '')
 
     def to_list(self) -> list:
         """Return entity data in list."""
-        self.format_caption()
+        self.format_data()
         return [
             self.destinationId,
             self.geoId,
             self.caption,
-            self.name
+            self.name,
+            self.name_lower
         ]
 
 

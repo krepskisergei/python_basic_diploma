@@ -14,7 +14,7 @@ class Database(SqliteDatabase):
     def get_location_by_id(self, id: int) -> Location:
         """Return Location by destinationId."""
         query = (
-            'SELECT destinationId, geoId, caption, name '
+            'SELECT destinationId, geoId, caption, name, name_lower '
             'FROM locations WHERE destinationId = ?'
         )
         try:
@@ -30,18 +30,19 @@ class Database(SqliteDatabase):
         """Return list of Locations by name."""
         # search by name
         query = (
-            'SELECT destinationId, geoId, caption, name '
-            'FROM locations WHERE name = ?'
+            'SELECT destinationId, geoId, caption, name, name_lower '
+            'FROM locations WHERE name_lower = ?'
         )
         try:
-            locations = self._select_all(query, [name.title()], {})
+            name_lower = name.lower().replace(' ', '').replace('-', '')
+            locations = self._select_all(query, [name_lower], {})
         except self.DBError:
             locations = []
         if len(locations) > 0:
             return [Location(**x) for x in locations]
         # search by caption
         query = (
-            'SELECT destinationId, geoId, caption, name '
+            'SELECT destinationId, geoId, caption, name, name_lower '
             'FROM locations WHERE caption LIKE ?'
         )
         try:
@@ -57,8 +58,8 @@ class Database(SqliteDatabase):
         """Add Location to database. Return status."""
         query = (
             'INSERT INTO locations('
-            'destinationId, geoId, caption, name)'
-            ' VALUES(?, ?, ?, ?)'
+            'destinationId, geoId, caption, name, name_lower)'
+            ' VALUES(?, ?, ?, ?, ?)'
         )
         try:
             self._update(query, location.to_list())

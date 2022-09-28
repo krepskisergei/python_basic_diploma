@@ -26,6 +26,7 @@ CREATE TABLE "locations"(
     "geoId" INTEGER NOT NULL,
     "caption" VARCHAR(255) NOT NULL UNIQUE,
     "name" VARCHAR(50),
+    "name_lower" VARCHAR(50),
     PRIMARY KEY ("destinationId")
 );
 

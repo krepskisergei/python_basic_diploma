@@ -65,7 +65,7 @@ class RapidApi:
             caption = data['caption']
             name = data['name']
             location = Location(destination_id, geo_id, caption, name)
-            location.format_caption()
+            location.format_data()
             return location
         except (KeyError, ValueError) as e:
             raise self.ApiBadData(*e.args)
