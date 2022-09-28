@@ -28,14 +28,13 @@ class Database(SqliteDatabase):
     @logger.debug_func
     def get_locations_by_name(self, name: str) -> list[Location]:
         """Return list of Locations by name."""
-        name = name.title()
         # search by name
         query = (
             'SELECT destinationId, geoId, caption, name '
             'FROM locations WHERE name = ?'
         )
         try:
-            locations = self._select_all(query, [name], {})
+            locations = self._select_all(query, [name.title()], {})
         except self.DBError:
             locations = []
         if len(locations) > 0:
@@ -59,7 +58,7 @@ class Database(SqliteDatabase):
         query = (
             'INSERT INTO locations('
             'destinationId, geoId, caption, name)'
-            ') VALUES(?, ?, ?, ?)'
+            ' VALUES(?, ?, ?, ?)'
         )
         try:
             self._update(query, location.to_list())

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class Location:
     """Dataclass for Location from API or DB."""
     destinationId: int
