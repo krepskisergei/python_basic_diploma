@@ -126,7 +126,32 @@ def callback_check_in(callback: CallbackQuery):
             reply_markup=key
         )
     else:
-        print(result)
+        msgs, step = s.process_command(chat_id, result)
+        for msg in msgs:
+            _m = bot.send_message(chat_id, msg.msg, reply_markup=msg.markup)
+        if step:
+            bot.register_next_step_handler(_m, get_next_handler(step))
+
+
+@bot.callback_query_handler(func=WMonthTelegramCalendar.func(calendar_id=1))
+def callback_check_out(callback: CallbackQuery):
+    """Process checkIn callback."""
+    min_date = datetime.now().date()
+    chat_id = callback.message.chat.id
+    result, key, step = WMonthTelegramCalendar(
+        calendar_id=1,
+        current_date=min_date,
+        min_date=min_date,
+        locale='ru'
+    ).process(callback.data)
+    if not result and key:
+        bot.edit_message_text(
+            f'{m.CHECK_IN_START_MESSAGE} {LSTEP[step]}',
+            chat_id,
+            callback.message.message_id,
+            reply_markup=key
+        )
+    else:
         msgs, step = s.process_command(chat_id, result)
         for msg in msgs:
             _m = bot.send_message(chat_id, msg.msg, reply_markup=msg.markup)

@@ -2,7 +2,6 @@ from datetime import date, timedelta
 from telebot.types import ReplyKeyboardMarkup
 from telebot.types import InlineKeyboardMarkup
 from telegram_bot_calendar import WMonthTelegramCalendar
-from telegram_bot_calendar import LSTEP
 from dataclasses import dataclass
 
 from app.logger import get_logger
@@ -37,6 +36,17 @@ def get_history(chat_id: int, command: str = None) -> History:
         return h
 
 
+def gen_calendar_msg(id: int, min_date: date, msg: str) -> MsgKeyboard:
+    """Generate message with Calendar keyboard."""
+    calendar, step = WMonthTelegramCalendar(
+        calendar_id=id,
+        current_date=min_date,
+        min_date=min_date,
+        locale='ru'
+    ).build()
+    return MsgKeyboard(msg, calendar)
+
+
 def process_command(
         chat_id: int, message: str = None) -> tuple[list[MsgKeyboard], str]:
     """Process user message. Return MsgKeyboard list and next handler."""
@@ -66,39 +76,38 @@ def process_command(
             messages = []
             messages.append(process_location_id(h, message))
             if h.current_step == 'checkIn':
-                min_date = date.today()
-                calendar, step = WMonthTelegramCalendar(
-                    calendar_id=0,
-                    current_date=min_date,
-                    min_date=min_date,
-                    locale='ru'
-                ).build()
-                messages.append(
-                    MsgKeyboard(
-                        f'{m.CHECK_IN_START_MESSAGE} {LSTEP[step]}',
-                        markup=calendar))
+                messages.append(gen_calendar_msg(
+                    0, date.today(), m.CHECK_IN_START_MESSAGE))
                 return (messages, None)
             return (messages, h.current_step)
         case 'checkIn':
+            # process checkIn current step
             messages = []
             messages.append(process_check_in(h, message))
             if h.current_step == 'checkOut':
                 min_date = h.checkIn + timedelta(days=1)
-                calendar, step = WMonthTelegramCalendar(
-                    calendar_id=1,
-                    current_date=min_date,
-                    min_date=min_date,
-                    locale='ru'
-                ).build()
-                messages.append(
-                    MsgKeyboard(
-                        f'{m.CHECK_IN_START_MESSAGE}',
-                        markup=calendar))
-                return (messages, None)
-            return (messages, h.current_step)
+                messages.append(gen_calendar_msg(
+                    1, min_date, m.CHECK_OUT_START_MESSAGE
+                ))
+            if h.current_step == 'checkIn':
+                messages.append(gen_calendar_msg(
+                    0, date.today(), m.CHECK_IN_START_MESSAGE))
+            return (messages, None)
         case 'checkOut':
-            print('checkOut')
-            pass
+            # process checkOut current step
+            messages = []
+            messages.append(process_check_out(h, message))
+            if h.current_step == 'checkOut':
+                min_date = h.checkIn + timedelta(days=1)
+                messages.append(gen_calendar_msg(
+                    1, min_date, m.CHECK_OUT_START_MESSAGE
+                ))
+                return (messages, None)
+            if h.current_step == 'priceMin':
+                messages.append(MsgKeyboard(m.MIN_PRICE_START_MESSAGE))
+            if h.current_step == 'resultsNum':
+                messages.append(MsgKeyboard('Количество результатов'))
+            return messages, h.current_step
 
 
 def process_location_id(h: History, location_name: str) -> MsgKeyboard:
@@ -145,6 +154,31 @@ def process_check_in(h: History, check_in: date) -> MsgKeyboard:
     """Process check in date"""
     update_attrs = h.set_attributes(
         {'checkIn': check_in})
+    if len(update_attrs) == 0:
+        return MsgKeyboard(m.CHECK_IN_WRONG_MESSAGE)
     db.update_history(h, update_attrs)
     return MsgKeyboard(
         f"{m.CHECK_IN_FINISH_MESSAGE}{check_in.strftime('%d.%m.%Y')}")
+
+
+def process_check_out(h: History, check_out: date) -> MsgKeyboard:
+    """Process check out date."""
+    update_attrs = h.set_attributes(
+        {'checkOut': check_out}
+    )
+    if len(update_attrs) == 0:
+        return MsgKeyboard(m.CHECK_OUT_WRONG_MESSAGE)
+    # skip steps for /lowprice, /highprice commands
+    if h.command == '/lowprice' or h.command == '/highprice':
+        new_attrs = h.set_attributes({
+            'priceMin': 0,
+            'priceMax': 1,
+            'distanceMin': 0,
+            'distanceMax': 1
+        })
+        for _k, _v in new_attrs.items():
+            if update_attrs.get(_k, None) is not None:
+                update_attrs[_k] = _v
+    db.update_history(h, update_attrs)
+    return MsgKeyboard(
+        f"{m.CHECK_OUT_FINISH_MESSAGE}{check_out.strftime('%d.%m.%Y')}")
