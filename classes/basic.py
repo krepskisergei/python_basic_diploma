@@ -19,7 +19,7 @@ class Location:
 
     @property
     def data(self) -> list:
-        """Return entity data in list."""
+        """Return instance data in list."""
         self._format_content()
         return [
             self.destinationId,
@@ -44,7 +44,7 @@ class Address:
 
     def data(self, order: set = None) -> str:
         """
-        Return entity data in string separated by commas.
+        Return instance data in string separated by commas.
         Data order according set order.
         """
         order_attrs = (
@@ -79,7 +79,7 @@ class Hotel:
 
     @property
     def data(self) -> list:
-        """Return entity data in list."""
+        """Return instance data in list."""
         return [
             self.id,
             self.name,
@@ -94,7 +94,7 @@ class Hotel:
 class HotelPhoto:
     """
     Dataclass for hotel photos from API and database.
-    Use format_url() before use data from entity.
+    Use format_url() before use data from instance.
     """
     imageId: int
     hotelId: int
@@ -102,7 +102,7 @@ class HotelPhoto:
 
     @property
     def data(self) -> list:
-        """Return entity data in list."""
+        """Return instance data in list."""
         return [
             self.imageId,
             self.hotelId,
@@ -121,7 +121,7 @@ class SearchResult:
 
     @property
     def data(self) -> list:
-        """Return entity data in list."""
+        """Return instance data in list."""
         return [
             self.hotel.id,
             self.price
