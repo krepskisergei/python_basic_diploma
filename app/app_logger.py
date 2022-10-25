@@ -19,27 +19,22 @@ class _AppLogger(logging.Logger):
     CRITICAL = logging.CRITICAL
 
     def __init__(self, name: str) -> None:
-        logger_level = self.INFO
-        super().__init__(name, logger_level)
-        if APP_DEBUG is not None:
+        super().__init__(name, self.INFO)
+        if APP_DEBUG:
             self.setLevel(self.DEBUG)
             stream = logging.StreamHandler()
             stream.setFormatter(logging.Formatter(self._LOG_FORMAT))
             stream.setLevel(self.DEBUG)
             self.addHandler(stream)
             self.addHandler(
-                self._file_handler(self.DEBUG, self._DEBUG_LOG_FN, True))
+                self._file_handler(self.DEBUG, self._DEBUG_LOG_FN))
         self.addHandler(self._file_handler(self.INFO, self._APP_LOG_FN))
         self.addHandler(self._file_handler(self.ERROR, self._ERROR_LOG_FN))
 
     def _file_handler(
-        self, level: int, fn: str, override: bool = False
-            ) -> logging.Handler:
+            self, level: int, fn: str) -> logging.Handler:
         """Return file handler with level."""
-        mode = 'a'
-        if override:
-            mode = 'w'
-        h = logging.FileHandler(fn, mode=mode, encoding='utf-8')
+        h = logging.FileHandler(fn, mode='a', encoding='utf-8')
         h.setFormatter(logging.Formatter(self._LOG_FORMAT))
         h.setLevel(level)
         h.set_name(fn.replace('.log', '').replace('logs', ''))
