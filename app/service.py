@@ -182,3 +182,33 @@ def process_check_out(h: History, check_out: date) -> MsgKeyboard:
     db.update_history(h, update_attrs)
     return MsgKeyboard(
         f"{m.CHECK_OUT_FINISH_MESSAGE}{check_out.strftime('%d.%m.%Y')}")
+
+
+def process_price_min(h: History, price_min: str) -> MsgKeyboard:
+    """Process priceMin"""
+    price_min = price_min.replace(' ', '').replace(',', '.')
+    try:
+        update_attrs = h.set_attributes(
+            {'priceMin': float(price_min)}
+        )
+    except ValueError:
+        return MsgKeyboard('priceMin error')
+    if len(update_attrs) == 0:
+        return MsgKeyboard('priceMin error')
+    db.update_history(update_attrs)
+    return MsgKeyboard('priceMin success')
+
+
+def process_price_max(h: History, price_max: str) -> MsgKeyboard:
+    """Process priceMax"""
+    price_max = price_max.replace(' ', '').replace(',', '.')
+    try:
+        update_attrs = h.set_attributes(
+            {'priceMax': float(price_max)}
+        )
+    except ValueError:
+        return MsgKeyboard('priceMin error')
+    if len(update_attrs) == 0:
+        return MsgKeyboard('priceMin error')
+    db.update_history(update_attrs)
+    return MsgKeyboard('priceMin success')

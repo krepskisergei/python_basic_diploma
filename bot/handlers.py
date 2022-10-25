@@ -1,13 +1,9 @@
+from datetime import timedelta, date
 from telebot import TeleBot
 from telebot.types import Message, CallbackQuery
-# from telebot.types import ReplyKeyboardMarkup
-# from telebot.types import InlineKeyboardMarkup
-# from telebot.types import InlineKeyboardButton
 # from telebot.types import InputMediaPhoto
 
 from telegram_bot_calendar import WMonthTelegramCalendar
-from telegram_bot_calendar import LSTEP
-from datetime import datetime
 
 from app.logger import get_logger
 from app.config import TOKEN
@@ -110,7 +106,7 @@ def handler(message: Message):
 @bot.callback_query_handler(func=WMonthTelegramCalendar.func(calendar_id=0))
 def callback_check_in(callback: CallbackQuery):
     """Process checkIn callback."""
-    min_date = datetime.now().date()
+    min_date = date.today()
     chat_id = callback.message.chat.id
     result, key, step = WMonthTelegramCalendar(
         calendar_id=0,
@@ -120,12 +116,12 @@ def callback_check_in(callback: CallbackQuery):
     ).process(callback.data)
     if not result and key:
         bot.edit_message_text(
-            f'{m.CHECK_IN_START_MESSAGE} {LSTEP[step]}',
+            m.CHECK_IN_START_MESSAGE,
             chat_id,
             callback.message.message_id,
             reply_markup=key
         )
-    else:
+    if result:
         msgs, step = s.process_command(chat_id, result)
         for msg in msgs:
             _m = bot.send_message(chat_id, msg.msg, reply_markup=msg.markup)
@@ -135,9 +131,15 @@ def callback_check_in(callback: CallbackQuery):
 
 @bot.callback_query_handler(func=WMonthTelegramCalendar.func(calendar_id=1))
 def callback_check_out(callback: CallbackQuery):
-    """Process checkIn callback."""
-    min_date = datetime.now().date()
+    """Process checkOut callback."""
     chat_id = callback.message.chat.id
+    # get min date
+    history = s.get_history(chat_id)
+    try:
+        min_date = history.checkIn
+    except AttributeError:
+        min_date = date.today()
+    min_date += timedelta(days=1)
     result, key, step = WMonthTelegramCalendar(
         calendar_id=1,
         current_date=min_date,
@@ -146,12 +148,12 @@ def callback_check_out(callback: CallbackQuery):
     ).process(callback.data)
     if not result and key:
         bot.edit_message_text(
-            f'{m.CHECK_IN_START_MESSAGE} {LSTEP[step]}',
+            m.CHECK_OUT_START_MESSAGE,
             chat_id,
             callback.message.message_id,
             reply_markup=key
         )
-    else:
+    if result:
         msgs, step = s.process_command(chat_id, result)
         for msg in msgs:
             _m = bot.send_message(chat_id, msg.msg, reply_markup=msg.markup)
