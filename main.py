@@ -31,20 +31,19 @@ if __name__ == '__main__':
         from classes.user_session import UserSession
         from datetime import datetime, date, timedelta
 
-        session = UserSession(123)
         attrs = {
+            'command': '/bestdeal',
             'id': 1,
             'queryTime': datetime.now(),
-            'command': '/bestdeal',
             'locationId': 404,
             'checkIn': date.today(),
-            'checkOut': date.today() + timedelta(days=1),
+            'checkOut': date.today() + timedelta(days=5),
             'priceMin': 0,
             'priceMax': 0,
-            'distanceMin': 1.3,
-            'distanceMax': 2.5,
-            'resultsNum': 4,
+            'distanceMin': 0,
+            'distanceMax': 0,
+            'resultsNum': 1,
             'photosNum': 0
         }
-        session.set_attrs(attrs)
+        session = UserSession(123, **attrs)
         print(session.data)
