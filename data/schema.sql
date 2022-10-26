@@ -33,7 +33,7 @@ CREATE TABLE "locations"(
 CREATE TABLE "hotels"(
     "id" INTEGER NOT NULL,
     "name" VARCHAR(50) NOT NULL,
-    "fullAddress" VARCHAR(255) NOT NULL,
+    "address" VARCHAR(255) NOT NULL,
     "url" VARCHAR(255),
     "starRating" INTEGER DEFAULT 0,
     "distance" VARCHAR(20),
