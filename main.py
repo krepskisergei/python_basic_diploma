@@ -28,22 +28,7 @@ if __name__ == '__main__':
         logger.debug('Debug.')
         logger.info('Application starts.')
 
-        from classes.user_session import UserSession
-        from datetime import datetime, date, timedelta
+        import app.service as s
 
-        attrs = {
-            'command': '/bestdeal',
-            'id': 1,
-            'queryTime': datetime.now(),
-            'locationId': 404,
-            'checkIn': date.today(),
-            'checkOut': date.today() + timedelta(days=5),
-            'priceMin': 0,
-            'priceMax': 0,
-            'distanceMin': 0,
-            'distanceMax': 0,
-            'resultsNum': 1,
-            'photosNum': 0
-        }
-        session = UserSession(123, **attrs)
-        print(session.data)
+        locations = s.get_locations('Минск')
+        print(locations)
