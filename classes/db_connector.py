@@ -60,40 +60,40 @@ class DBConnector:
         self, q: str,
             v: list = [], rf: object = None) -> tuple | dict | int | str:
         """Return fetchone result of SQL query with rf row_factory."""
-        logger.debug('_select_one query', q, v, rf)
-        with self._conn.cursor() as c:
-            if rf is not None:
-                c.row_factory = self._row_factory(rf)
-            try:
-                c.execute(q, v)
-                return c.fetchone()
-            except sqlite3.Error as e:
-                raise self._get_exception(e)
+        logger.debug(f"_select_one query [{q}] [{', '.join(map(str, v))}]")
+        cursor = self._conn.cursor()
+        if rf is not None:
+            cursor.row_factory = self._row_factory(rf)
+        try:
+            cursor.execute(q, v)
+            return cursor.fetchone()
+        except sqlite3.Error as e:
+            raise self._get_exception(e)
 
     def _select_all(
         self, q: str,
             v: list = [], rf: dict = None) -> list:
         """Return fetchall result of SQL query with rf row_factory."""
-        logger.debug('_select_all query', q, v, rf)
-        with self._conn.cursor() as c:
-            if rf is not None:
-                c.row_factory = self._row_factory(rf)
-            try:
-                c.execute(q, v)
-                return c.fetchall()
-            except sqlite3.Error as e:
-                raise self._get_exception(e)
+        logger.debug(f"_select_all query [{q}] [{', '.join(map(str, v))}]")
+        cursor = self._conn.cursor()
+        if rf is not None:
+            cursor.row_factory = self._row_factory(rf)
+        try:
+            cursor.execute(q, v)
+            return cursor.fetchall()
+        except sqlite3.Error as e:
+            raise self._get_exception(e)
 
     def _update(self, q: str, v: list = []) -> None:
         """Execute update (INSERT, UPDATE) SQL query."""
-        logger.debug('_update query', q, v)
-        with self._conn.cursor() as c:
-            try:
-                c.execute(q, v)
-                self._conn.commit()
-            except sqlite3.Error as e:
-                self._conn.rollback()
-                raise self._get_exception(e)
+        logger.debug(f"_update query [{q}] [{', '.join(map(str, v))}]")
+        cursor = self._conn.cursor()
+        try:
+            cursor.execute(q, v)
+            self._conn.commit()
+        except sqlite3.Error as e:
+            self._conn.rollback()
+            raise self._get_exception(e)
 
     # Row factories
     def _row_factory(self, rf: dict | int | str = None) -> object:
