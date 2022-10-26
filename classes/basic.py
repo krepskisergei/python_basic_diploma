@@ -116,13 +116,15 @@ class HotelPhoto:
 
 @dataclass(frozen=True)
 class SearchResult:
-    hotel: Hotel
+    sessionId: int
+    hotelId: int
     price: float
 
     @property
     def data(self) -> list:
         """Return instance data in list."""
         return [
-            self.hotel.id,
+            self.sessionId,
+            self.hotelId,
             self.price
         ]
