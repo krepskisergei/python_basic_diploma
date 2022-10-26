@@ -1,6 +1,6 @@
 PRAGMA foreing_keys=on;
 
-CREATE TABLE "history"(
+CREATE TABLE "sessions"(
     "id" INTEGER NOT NULL,
     "chatId" INTEGER NOT NULL,
     "queryTime" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -52,11 +52,11 @@ CREATE TABLE "photos"(
 
 CREATE TABLE "results"(
     "id" INTEGER NOT NULL,
-    "historyId" INTEGER NOT NULL,
+    "sessionId" INTEGER NOT NULL,
     "hotelId" INTEGER NOT NULL,
     "price" REAL NOT NULL,
     PRIMARY KEY("id"),
-    FOREIGN KEY("historyId") REFERENCES "history"("id") 
+    FOREIGN KEY("sessionId") REFERENCES "sessions"("id") 
         ON UPDATE CASCADE 
         ON DELETE CASCADE,
     FOREIGN KEY("hotelId") REFERENCES "hotels"("id") 
