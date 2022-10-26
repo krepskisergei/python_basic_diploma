@@ -9,9 +9,9 @@ logger = get_logger(__name__)
 class UserSession:
     """Class for keep user data in sessions."""
     attrs = {
+        'command': str,
         'id': int,
         'queryTime': datetime,
-        'command': str,
         'locationId': int,
         'checkIn': date,
         'checkOut': date,
@@ -23,6 +23,7 @@ class UserSession:
         'photosNum': int
     }
     id: int
+    queryTime: datetime
     command: str
     locationId: int
     checkIn: date
@@ -37,24 +38,12 @@ class UserSession:
     def __init__(self, chatId: int, **kwargs) -> None:
         self.chatId = chatId
         if kwargs:
-            # update instance by kwargs
-            pass
+            self.set_attrs(kwargs)
 
     @property
     def data(self) -> list:
         """Return instance data in list."""
-        attrs = (
-            'chatId', 'queryTime', 'command', 'locationId',
-            'checkIn', 'checkOut', 'priceMin', 'priceMax',
-            'distanceMin', 'distanceMax', 'resultsNum', 'photosNum'
-        )
-        values = []
-        for _attr in attrs:
-            try:
-                values.append(self.__getattribute__(_attr))
-            except AttributeError:
-                values.append(None)
-        return values
+        return [self.chatId]
 
     @property
     def current_step(self) -> str:
@@ -245,7 +234,7 @@ class UserSession:
 
         try:
             value = self.__getattribute__(attr)
-            if value <= MAX_RESULTS:
+            if 0 < value <= MAX_RESULTS:
                 return None
             raise UserSessionValueError(
                 f'Invalid attribute [{attr}] value: {value}.')
