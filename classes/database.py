@@ -75,7 +75,7 @@ class DB(DBConnector):
             'destinationId', 'geoId', 'caption', 'name', 'name_lower'
         )
         q = (
-            f"INSERT INTO locations({''})"
+            f"INSERT INTO locations({','.join(columns)})"
             f" VALUES ({', '.join('?' * len(columns))})"
         )
         try:
