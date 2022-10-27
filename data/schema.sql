@@ -34,9 +34,8 @@ CREATE TABLE "hotels"(
     "id" INTEGER NOT NULL,
     "name" VARCHAR(50) NOT NULL,
     "address" VARCHAR(255) NOT NULL,
-    "url" VARCHAR(255),
     "starRating" INTEGER DEFAULT 0,
-    "distance" VARCHAR(20),
+    "distance" REAL DEFAULT NULL,
     PRIMARY KEY("id")
 );
 
@@ -54,6 +53,7 @@ CREATE TABLE "results"(
     "id" INTEGER NOT NULL,
     "sessionId" INTEGER NOT NULL,
     "hotelId" INTEGER NOT NULL,
+    "url" TEXT,
     "price" REAL NOT NULL,
     PRIMARY KEY("id"),
     FOREIGN KEY("sessionId") REFERENCES "sessions"("id") 

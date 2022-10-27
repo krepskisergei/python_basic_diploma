@@ -36,13 +36,12 @@ class Address:
     streetAddress: str
     extendedAddress: str
     locality: str
-    postalCode: str
     region: str
     countryName: str
-    countryCode: str
     # TODO: add all attributes from API responce
 
-    def data(self, order: set = None) -> str:
+    @property
+    def data(self) -> str:
         """
         Return instance data in string separated by commas.
         Data order according set order.
@@ -54,8 +53,6 @@ class Address:
             'region',
             'countryName'
         )
-        if order is not None:
-            order_attrs = order
         data_list = []
         for _attr in order_attrs:
             try:
@@ -73,9 +70,8 @@ class Hotel:
     id: int
     name: str
     address: str
-    url: str
     starRating: int
-    distance: str
+    distance: float | None
 
     @property
     def data(self) -> list:
@@ -84,7 +80,6 @@ class Hotel:
             self.id,
             self.name,
             self.fullAddress,
-            self.url,
             self.starRating,
             self.distance
         ]
@@ -120,6 +115,7 @@ class HotelPhoto:
 class SearchResult:
     sessionId: int
     hotelId: int
+    url: str
     price: float
 
     @property
