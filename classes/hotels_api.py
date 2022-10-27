@@ -51,9 +51,24 @@ class HotelsApi(Api):
         except (KeyError, ValueError) as e:
             raise self.ApiParseError(*e.args)
 
-    def _parse_address(self, data: dict) -> Address:
-        """Parse dict data to Address instance."""
-        pass
+    def _parse_address(self, data: dict) -> str:
+        """
+        Parse dict data to Address instance.
+        Return full address in str.
+        """
+        try:
+            address = Address(
+                streetAddress=data['streetAddress'],
+                extendedAddress=data['extendedAddress'],
+                locality=data['locality'],
+                postalCode=data['postalCode'],
+                region=data['region'],
+                countryName=data['countryName'],
+                countryCode=data['countryCode']
+            )
+            return address.data
+        except (KeyError, ValueError) as e:
+            raise self.ApiParseError(*e.args)
 
     def _parse_hotel(self, data: dict) -> Hotel:
         """Parse dict data to Hotel instance."""
