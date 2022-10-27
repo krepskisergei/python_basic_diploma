@@ -28,15 +28,30 @@ if __name__ == '__main__':
         logger.debug('Debug.')
         logger.info('Application starts.')
 
-        import app.service as s
-        from classes.basic import Hotel
+        from classes.user_session import UserSession
+        from classes.hotels_api import HotelsApi
+        from datetime import date, datetime
 
-        hotel = Hotel(
-            id=1178275040,
-            name='asdf',
-            address='asdf',
-            url='asdf',
-            starRating=4,
-            distance='sdf4'
-        )
-        photos = s.get_hotel_photos(hotel, 3)
+        session_dict = {
+            'command': '/bestdeal',
+            'id': 100,
+            'queryTime': datetime.now(),
+            'locationId': 118894,
+            'checkIn': date(2022, 12, 15),
+            'checkOut': date(2022, 12, 18),
+            'priceMin': 5000,
+            'priceMax': 8000,
+            'distanceMin': 0.5,
+            'distanceMax': 1,
+            'resultsNum': 5,
+            'photosNum': 0
+        }
+        session = UserSession(1, **session_dict)
+        api = HotelsApi()
+        results = api.get_search_results(session)
+        print(f'Found {len(results)} results:')
+        for result in results:
+            print('#' * 20)
+            print(result.hotel)
+            print('-' * 10)
+            print(result.search_result)
