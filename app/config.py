@@ -24,9 +24,9 @@ TOKEN = load_variable('BOT_TOKEN')
 API_HOST = load_variable('API_HOST')
 API_KEY = load_variable('API_KEY')
 API_LOCALE = load_variable('API_LOCALE', 'ru_RU')
-API_CURRENCY = load_variable('API_CURRENCY', 'RUB')
+API_CURRENCY = load_variable('API_CURRENCY', 'RUB').upper()
 # Bot
-IMAGE_SUFFIX = load_variable('IMAGE_SUFFIX', 'g')
+IMAGE_SUFFIX = load_variable('IMAGE_SUFFIX', 'g').lower()
 try:
     MAX_RESULTS = int(load_variable('MAX_RESULTS', '5'))
     MAX_PHOTOS = int(load_variable('MAX_PHOTOS', '5'))
