@@ -61,7 +61,10 @@ class HotelsApi(Api):
 
     def _parse_hotel_photos(self, data: dict) -> HotelPhoto:
         """Parse dict data to HotelPhoto instance."""
-        pass
+        try:
+            return HotelPhoto(data['imageId'], data['baseUrl'])
+        except (KeyError, ValueError) as e:
+            raise self.ApiParseError(*e.args)
 
     def _parse_search_results(self, data: dict) -> SearchResult:
         """Parse dict data to SearchResult instance."""
@@ -89,7 +92,8 @@ class HotelsApi(Api):
                 logger.debug('get_locations return None.')
                 return []
         except KeyError as e:
-            logger.error('get_locations error', *e.args)
+            logger.error(
+                f"get_locations error: [{' '.join(map(str, *e.args))}]")
             return []
         if len(entities) == 0:
             logger.debug('get_locations return None.')
@@ -100,7 +104,8 @@ class HotelsApi(Api):
                 if entity['type'].upper() == 'CITY':
                     locations.append(self._parse_location(entity))
             except KeyError as e:
-                logger.error('get_locations error', *e.args)
+                logger.error(
+                    f"get_locations error: [{' '.join(map(str, *e.args))}]")
             except self.ApiParseError:
                 pass
         return locations
@@ -110,6 +115,26 @@ class HotelsApi(Api):
         """Return ApiSearchResult instances list by API request result."""
         pass
 
-    def get_hotel_photos(self, hotel_id: int) -> list[HotelPhoto]:
+    def get_hotel_photos(
+                self, hotel: Hotel, limit: int = 0) -> list[HotelPhoto]:
         """Return HotelPhoto instances list by API request result."""
-        pass
+        url = f'{self._base_url}/properties/get-hotel-photos'
+        params = {'id': hotel.id}
+        try:
+            data = self._get(url, params)
+        except self.ApiRequestError:
+            return []
+        hotel_photos = []
+        try:
+            for photo_data in data['hotelImages']:
+                try:
+                    hotel_photos.append(self._parse_hotel_photos(photo_data))
+                except self.ApiParseError:
+                    pass
+                if limit > 0 and len(hotel_photos) >= limit:
+                    break
+        except KeyError as e:
+            logger.error(
+                f"get_hotel_photos error: [{' '.join(map(str, *e.args))}]")
+            return []
+        return hotel_photos

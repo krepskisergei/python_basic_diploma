@@ -123,12 +123,12 @@ class DB(DBConnector):
 
     # HotelPhotos
     def get_hotel_photos(
-        self, hotel_id: int,
+        self, hotel: Hotel,
             limit: int = 0) -> list[HotelPhoto]:
         """
         Return list of HotelPhoto instances by Hotel id.
         """
-        columns = ('imageId', 'hotelId', 'baseUrl')
+        columns = ('imageId', 'baseUrl')
         q = (
             f"SELECT {', '.join(columns)} FROM photos"
             " WHERE hotelId = ? ORDER BY imageId"
@@ -136,7 +136,7 @@ class DB(DBConnector):
         if limit > 0:
             q += f" LIMIT {limit}"
         try:
-            response = self._select_all(q, [hotel_id], {})
+            response = self._select_all(q, [hotel.id], {})
         except (self.DBError):
             response = []
         if len(response) > 0:
@@ -144,10 +144,14 @@ class DB(DBConnector):
         logger.debug('get_hotel_photos return None.')
         return []
 
-    def add_hotel_photos(self, photos: list[HotelPhoto]) -> bool:
+    def add_hotel_photos(self, hotel: Hotel, photos: list[HotelPhoto]) -> bool:
         """Return status of adding HotelPhoto instances list."""
-        columns = ('imageId', 'hotelId', 'baseUrl')
-        values = [x for y in photos for x in y.data]
+        columns = ('imageId', 'baseUrl', 'hotelId')
+        values = []
+        for photo in photos:
+            for value in photo.data:
+                values.append(value)
+            values.append(hotel.id)
         values_placer = ', '.join(
             [f"({', '.join('?' * len(columns))})" for _ in range(len(photos))])
         q = (

@@ -90,14 +90,13 @@ class Hotel:
         ]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class HotelPhoto:
     """
     Dataclass for hotel photos from API and database.
     Use format_url() before use data from instance.
     """
     imageId: int
-    hotelId: int
     baseUrl: str
 
     @property
@@ -105,9 +104,11 @@ class HotelPhoto:
         """Return instance data in list."""
         return [
             self.imageId,
-            self.hotelId,
             self.baseUrl
         ]
+
+    # TODO: change format_url to method output(suffix: str)
+    # make dataclass frozen=True
 
     def format_url(self, suffix: str) -> None:
         """Replace {size} to suffix in baseUrl."""

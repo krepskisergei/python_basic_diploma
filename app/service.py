@@ -36,15 +36,15 @@ def get_locations(location_name: str, limit: int = 0) -> list[Location]:
 def get_hotel_photos(hotel: Hotel, limit: int = 0) -> list[HotelPhoto]:
     """Return HotelPhoto instances list by database and Api responces."""
     # search in database
-    photos = db.get_hotel_photos(hotel.id, limit)
+    photos = db.get_hotel_photos(hotel, limit)
     if len(photos) > 0:
         return photos
     # search by Api
-    photos = api.get_hotel_photos(hotel.id)
+    photos = api.get_hotel_photos(hotel, limit=0)
     if len(photos) == 0:
         return []
     # save hotel photos to database
-    if not db.add_hotel_photos():
+    if not db.add_hotel_photos(hotel, photos):
         logger.debug('get_hotel_photos error.')
     # return photos
     if limit > 0 and limit > len(photos):

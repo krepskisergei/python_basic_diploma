@@ -29,6 +29,14 @@ if __name__ == '__main__':
         logger.info('Application starts.')
 
         import app.service as s
+        from classes.basic import Hotel
 
-        locations = s.get_locations('Минск')
-        print(locations)
+        hotel = Hotel(
+            id=1178275040,
+            name='asdf',
+            address='asdf',
+            url='asdf',
+            starRating=4,
+            distance='sdf4'
+        )
+        photos = s.get_hotel_photos(hotel, 3)
