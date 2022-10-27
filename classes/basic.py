@@ -108,6 +108,7 @@ class HotelPhoto:
         ]
 
     # TODO: change format_url to method output(suffix: str)
+    # use suffix "g" by default
     # make dataclass frozen=True
 
     def format_url(self, suffix: str) -> None:

@@ -26,8 +26,10 @@ API_KEY = load_variable('API_KEY')
 API_LOCALE = load_variable('API_LOCALE', 'ru_RU')
 API_CURRENCY = load_variable('API_CURRENCY', 'RUB')
 # Bot
+IMAGE_SUFFIX = load_variable('IMAGE_SUFFIX', 'g')
 try:
     MAX_RESULTS = int(load_variable('MAX_RESULTS', '5'))
     MAX_PHOTOS = int(load_variable('MAX_PHOTOS', '5'))
+    MAX_HISTORY = int(load_variable('MAX_HISTORY', '5'))
 except ValueError as e:
     raise EnvironmentError(str(e))
