@@ -37,7 +37,7 @@ class _AppLogger(logging.Logger):
         h = logging.FileHandler(fn, mode='a', encoding='utf-8')
         h.setFormatter(logging.Formatter(self._LOG_FORMAT))
         h.setLevel(level)
-        h.set_name(fn.replace('.log', '').replace('logs', ''))
+        h.set_name(f'app_{logging.getLevelName(level)}s')
         return h
 
     def log_msg(self, level: int, msg: str) -> None:
