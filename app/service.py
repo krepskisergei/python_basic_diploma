@@ -1,6 +1,5 @@
-from dataclasses import dataclass
 from datetime import datetime, date
-from telebot.types import InlineKeyboardMarkup, ReplyKeyboardMarkup
+from telebot.types import ReplyKeyboardMarkup  # , InlineKeyboardMarkup
 
 from app.app_logger import get_logger
 from app.config import DB_ENGINE, API_CURRENCY
@@ -8,6 +7,7 @@ import bot.dialog as d
 from classes.basic import Hotel, HotelPhoto, Location
 from classes.database import DB
 from classes.hotels_api import HotelsApi
+from classes.tbot import ReplyMessage
 from classes.user_session import UserSession
 
 
@@ -26,20 +26,6 @@ CAL_IDS = {
     'check_in': 0,
     'check_out': 1
 }
-
-
-# Classes
-# TODO: move ReplyMessage in handlers
-# TODO: add method fo ReplyMessage processing
-@dataclass(frozen=True)
-class ReplyMessage:
-    """Dataclass for reply messages."""
-    chat_id: int
-    edit: bool = False
-    text: str = None
-    markup: ReplyKeyboardMarkup | InlineKeyboardMarkup = None
-    media: list = None
-    next_handler: bool = True
 
 
 # Validator
