@@ -2,32 +2,32 @@ PRAGMA foreing_keys=on;
 
 CREATE TABLE "sessions"(
     "id" INTEGER NOT NULL,
-    "chatId" INTEGER NOT NULL,
-    "queryTime" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "chat_id" INTEGER NOT NULL,
+    "query_time" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "command" VARCHAR(10) NOT NULL,
-    "locationId" INTEGER DEFAULT NULL,
-    "checkIn" DATE DEFAULT NULL,
-    "checkOut" DATE DEFAULT NULL,
-    "priceMin" REAL DEFAULT NULL,
-    "priceMax" REAL DEFAULT NULL,
-    "distanceMin" REAL DEFAULT NULL,
-    "distanceMax" REAL DEFAULT NULL,
-    "resultsNum" INTEGER DEFAULT NULL,
-    "photosNum" INTEGER DEFAULT NULL,
+    "location_id" INTEGER DEFAULT NULL,
+    "check_in" DATE DEFAULT NULL,
+    "check_out" DATE DEFAULT NULL,
+    "price_min" REAL DEFAULT NULL,
+    "price_max" REAL DEFAULT NULL,
+    "distance_min" REAL DEFAULT NULL,
+    "distance_max" REAL DEFAULT NULL,
+    "results_num" INTEGER DEFAULT NULL,
+    "photos_num" INTEGER DEFAULT NULL,
     "complete" BOOLEAN DEFAULT FALSE,
     PRIMARY KEY("id"),
-    FOREIGN KEY("locationId") REFERENCES "locations"("destinationId") 
+    FOREIGN KEY("location_id") REFERENCES "locations"("destination_id") 
         ON UPDATE CASCADE 
         ON DELETE SET NULL
 );
 
 CREATE TABLE "locations"(
-    "destinationId" INTEGER NOT NULL,
-    "geoId" INTEGER NOT NULL,
+    "destination_id" INTEGER NOT NULL,
+    "geo_id" INTEGER NOT NULL,
     "caption" VARCHAR(255) NOT NULL UNIQUE,
     "name" VARCHAR(50),
     "name_lower" VARCHAR(50),
-    PRIMARY KEY ("destinationId")
+    PRIMARY KEY ("destination_id")
 );
 
 CREATE TABLE "hotels"(
@@ -40,26 +40,26 @@ CREATE TABLE "hotels"(
 );
 
 CREATE TABLE "photos"(
-    "imageId" INTEGER NOT NULL,
-    "hotelId" INTEGER NOT NULL,
-    "baseUrl" TEXT NOT NULL,
-    PRIMARY KEY("imageId"),
-    FOREIGN KEY("hotelId") REFERENCES "hotels"("id") 
+    "id" INTEGER NOT NULL,
+    "hotel_id" INTEGER NOT NULL,
+    "url" TEXT NOT NULL,
+    PRIMARY KEY("id"),
+    FOREIGN KEY("hotel_id") REFERENCES "hotels"("id") 
         ON UPDATE CASCADE 
         ON DELETE CASCADE
 );
 
 CREATE TABLE "results"(
     "id" INTEGER NOT NULL,
-    "sessionId" INTEGER NOT NULL,
-    "hotelId" INTEGER NOT NULL,
+    "session_id" INTEGER NOT NULL,
+    "hotel_id" INTEGER NOT NULL,
     "url" TEXT,
     "price" REAL NOT NULL,
     PRIMARY KEY("id"),
-    FOREIGN KEY("sessionId") REFERENCES "sessions"("id") 
+    FOREIGN KEY("session_id") REFERENCES "sessions"("id") 
         ON UPDATE CASCADE 
         ON DELETE CASCADE,
-    FOREIGN KEY("hotelId") REFERENCES "hotels"("id") 
+    FOREIGN KEY("hotel_id") REFERENCES "hotels"("id") 
         ON UPDATE CASCADE 
         ON DELETE CASCADE
 )

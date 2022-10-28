@@ -29,29 +29,41 @@ if __name__ == '__main__':
         logger.info('Application starts.')
 
         from classes.user_session import UserSession
-        from classes.hotels_api import HotelsApi
         from datetime import date, datetime
+        import app.service as s
+
+        command = input('Enter command: ')
+
+        session = UserSession(100, **{'command': command})
+
+        location_name = input('Enter location: ')
+
+        locations = s.get_locations(location_name)
 
         session_dict = {
-            'command': '/bestdeal',
             'id': 100,
-            'queryTime': datetime.now(),
-            'locationId': 118894,
-            'checkIn': date(2022, 12, 15),
-            'checkOut': date(2022, 12, 18),
-            'priceMin': 5000,
-            'priceMax': 8000,
-            'distanceMin': 0.5,
-            'distanceMax': 1,
-            'resultsNum': 5,
-            'photosNum': 0
+            'query_time': datetime.now(),
+            'location_id': locations[0].destination_id,
+            'check_in': date(2022, 12, 15),
+            'check_out': date(2022, 12, 18),
+            'price_min': 5000,
+            'price_max': 8000,
+            'distance_min': 0.5,
+            'distance_max': 1,
+            'results_num': 3,
+            'photos_num': 0
         }
-        session = UserSession(1, **session_dict)
-        api = HotelsApi()
-        results = api.get_search_results(session)
+        session.set_attrs(session_dict)
+
+        results = s.api.get_search_results(session)
         print(f'Found {len(results)} results:')
         for result in results:
             print('#' * 20)
             print(result.hotel)
             print('-' * 10)
             print(result.search_result)
+        if len(results) > 0:
+            photos = s.get_hotel_photos(results[0], 3)
+            print('*' * 20)
+            for _p in photos:
+                print(_p)

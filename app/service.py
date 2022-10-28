@@ -28,7 +28,7 @@ def get_locations(location_name: str, limit: int = 0) -> list[Location]:
         if not db.add_location(location):
             logger.debug('get_locations error.')
     # return locations
-    if limit > 0 and limit > len(locations):
+    if 0 < limit > len(locations):
         return locations[:limit]
     return locations
 
@@ -47,6 +47,6 @@ def get_hotel_photos(hotel: Hotel, limit: int = 0) -> list[HotelPhoto]:
     if not db.add_hotel_photos(hotel, photos):
         logger.debug('get_hotel_photos error.')
     # return photos
-    if limit > 0 and limit > len(photos):
+    if 0 < limit < len(photos):
         return photos[:limit]
     return photos

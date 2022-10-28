@@ -14,11 +14,11 @@ class DB(DBConnector):
     def get_location_byid(self, id: int) -> Location:
         """Return Location instance by id."""
         columns = (
-            'destinationId', 'geoId', 'caption', 'name', 'name_lower'
+            'destination_id', 'geo_id', 'caption', 'name', 'name_lower'
         )
         q = (
             f"SELECT {', '.join(columns)} FROM locations"
-            " WHERE destinationId = ?"
+            " WHERE destination_id = ?"
         )
         try:
             response = self._select_one(q, [id], {})
@@ -37,11 +37,11 @@ class DB(DBConnector):
         """
         # query by name_lower
         columns = (
-            'destinationId', 'geoId', 'caption', 'name', 'name_lower'
+            'destination_id', 'geo_id', 'caption', 'name', 'name_lower'
         )
         q = (
             f"SELECT {', '.join(columns)} FROM locations"
-            " WHERE name_lower = ? ORDER BY destinationId"
+            " WHERE name_lower = ? ORDER BY destination_id"
         )
         if limit > 0:
             q += f" LIMIT {limit}"
@@ -55,7 +55,7 @@ class DB(DBConnector):
         # query by caption
         q = (
             f"SELECT {', '.join(columns)} FROM locations"
-            " WHERE caption LIKE ? ORDER BY destinationId"
+            " WHERE caption LIKE ? ORDER BY destination_id"
         )
         if limit > 0:
             q += f" LIMIT {limit}"
@@ -72,7 +72,7 @@ class DB(DBConnector):
     def add_location(self, location: Location) -> bool:
         """Return status of adding Location instance."""
         columns = (
-            'destinationId', 'geoId', 'caption', 'name', 'name_lower'
+            'destination_id', 'geo_id', 'caption', 'name', 'name_lower'
         )
         q = (
             f"INSERT INTO locations({','.join(columns)})"
@@ -90,7 +90,7 @@ class DB(DBConnector):
     def get_hotel_byid(self, id: int) -> Hotel:
         """Return Hotel instance by id."""
         columns = (
-            'id', 'name', 'address', 'url', 'starRating', 'distance'
+            'id', 'name', 'address', 'star_rating', 'distance'
         )
         q = (
             f"SELECT {', '.join(columns)} FROM hotels"
@@ -107,7 +107,7 @@ class DB(DBConnector):
     def add_hotel(self, hotel: Hotel) -> bool:
         """Return status of adding Hotel instance."""
         columns = (
-            'id', 'name', 'address', 'url', 'starRating', 'distance'
+            'id', 'name', 'address', 'star_rating', 'distance'
         )
         q = (
             f"INSERT INTO hotels({', '.join(columns)}) "
@@ -128,10 +128,10 @@ class DB(DBConnector):
         """
         Return list of HotelPhoto instances by Hotel id.
         """
-        columns = ('imageId', 'baseUrl')
+        columns = ('id', 'url')
         q = (
             f"SELECT {', '.join(columns)} FROM photos"
-            " WHERE hotelId = ? ORDER BY imageId"
+            " WHERE hotel_id = ? ORDER BY id"
         )
         if limit > 0:
             q += f" LIMIT {limit}"
@@ -146,7 +146,7 @@ class DB(DBConnector):
 
     def add_hotel_photos(self, hotel: Hotel, photos: list[HotelPhoto]) -> bool:
         """Return status of adding HotelPhoto instances list."""
-        columns = ('imageId', 'baseUrl', 'hotelId')
+        columns = ('id', 'url', 'hotel_id')
         values = []
         for photo in photos:
             for value in photo.data:
@@ -167,15 +167,15 @@ class DB(DBConnector):
             return False
 
     # SearchResult
-    def get_search_results(self, session_id: int) -> list[SearchResult]:
+    def get_search_results(self, session: UserSession) -> list[SearchResult]:
         """Return list of SearchResult instances by UserSession.id."""
-        columns = ('sessionId', 'hotelId', 'price')
+        columns = ('session_id', 'hotel_id', 'url', 'price')
         q = (
             f"SELECT {', '.join(columns)} FROM results"
-            " WHERE sessionId = ? ORDER BY id"
+            " WHERE session_id = ?"
         )
         try:
-            response = self._select_all(q, [session_id], {})
+            response = self._select_all(q, [session.id], {})
         except self.DBError:
             response = None
         if len(response) > 0:
@@ -185,14 +185,14 @@ class DB(DBConnector):
 
     def add_search_results(self, search_results: list[SearchResult]) -> bool:
         """Return status of adding SearchResult instances list."""
-        columns = ('sessionId', 'hotelId', 'price')
+        columns = ('session_id', 'hotel_id', 'url', 'price')
         values = [x for y in search_results for x in y.data]
         values_placer = ', '.join(
             [f"({', '.join('?' * len(columns))})"
                 for _ in range(len(search_results))]
         )
         q = (
-            f"INSERT INTO photos({', '.join(columns)})"
+            f"INSERT INTO results({', '.join(columns)})"
             f" VALUES {values_placer}"
         )
         try:
@@ -207,13 +207,13 @@ class DB(DBConnector):
     def get_active_session(self, chat_id: int) -> UserSession:
         """Return active UserSession instance by chat_id."""
         columns = (
-            'command', 'id', 'queryTime', 'locationId',
-            'checkIn', 'checkOut', 'priceMin', 'priceMax',
-            'distanceMin', 'distanceMax', 'resultsNum', 'photosNum'
+            'command', 'id', 'query_time', 'location_id',
+            'check_in', 'check_out', 'price_min', 'price_max',
+            'distance_min', 'distance_max', 'results_num', 'photos_num'
         )
         q = (
             f"SELECT {', '.join(columns)} FROM sessions"
-            " WHERE chatId = ? AND complete IS FALSE"
+            " WHERE chat_id = ? AND complete IS FALSE"
         )
         try:
             response = self._select_one(q, [chat_id], {})
@@ -224,16 +224,16 @@ class DB(DBConnector):
             return None
         return UserSession(chat_id, **response)
 
-    def get_sessions(self, chat_id, limit: int = 0) -> list[UserSession]:
+    def get_sessions(self, chat_id: int, limit: int = 0) -> list[UserSession]:
         """Return list of complete UserSession instances list by chat_id."""
         columns = (
-            'command', 'id', 'queryTime', 'locationId',
-            'checkIn', 'checkOut', 'priceMin', 'priceMax',
-            'distanceMin', 'distanceMax', 'resultsNum', 'photosNum'
+            'command', 'id', 'query_time', 'location_id',
+            'check_in', 'check_out', 'price_min', 'price_max',
+            'distance_min', 'distance_max', 'results_num', 'photos_num'
         )
         q = (
             f"SELECT {', '.join(columns)} FROM sessions"
-            " WHERE chatId = ? AND complete IS TRUE"
+            " WHERE chat_id = ? AND complete IS TRUE"
             " ORDER BY queryTime DECS"
         )
         if limit > 0:
@@ -249,7 +249,7 @@ class DB(DBConnector):
 
     def add_session(self, session: UserSession) -> UserSession:
         """Return added UserSession instance."""
-        columns = ('chatId', 'command')
+        columns = ('chat_id', 'command')
         try:
             values = [session.__getattribute__(x) for x in columns]
         except AttributeError as e:
@@ -273,7 +273,7 @@ class DB(DBConnector):
         """
         try:
             id = session.id
-            chat_id = session.chatId
+            chat_id = session.chat_id
         except AttributeError as e:
             logger.error('update_session error', session, *e.args)
             return None

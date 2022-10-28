@@ -13,10 +13,10 @@ logger = get_logger(__name__)
 
 @dataclass(frozen=False)
 class ApiSearchResult:
-    hotel_id: int
+    id: int
     name: str
     address: str
-    starRating: int
+    star_rating: int
     distance: float
     price: float
     session: UserSession = None
@@ -25,15 +25,15 @@ class ApiSearchResult:
     def hotel(self) -> Hotel:
         """Return Hotel instance."""
         return Hotel(
-            id=self.hotel_id, name=self.name, address=self.address,
-            starRating=self.starRating, distance=self.distance)
+            id=self.id, name=self.name, address=self.address,
+            star_rating=self.star_rating, distance=self.distance)
 
     @property
     def search_result(self) -> SearchResult:
         """Return SearchResult instance."""
         try:
             return SearchResult(
-                sessionId=self.session.id, hotelId=self.hotel_id,
+                session_id=self.session.id, hotel_id=self.id,
                 url=self._url, price=self.price)
         except AttributeError as e:
             logger.error(
@@ -45,11 +45,11 @@ class ApiSearchResult:
         """Return url"""
         try:
             return (
-                f'https://www.hotels.com/ho{self.hotel_id}/'
-                f'?q-check-in={str(self.session.checkIn)}'
-                f'&q-check-out={str(self.session.checkOut)}'
+                f'https://www.hotels.com/ho{self.id}/'
+                f'?q-check-in={str(self.session.check_in)}'
+                f'&q-check-out={str(self.session.check_out)}'
                 '&q-rooms=1&q-room-0-adults=1&q-room-0-children=0'
-                f'&f-hotel-id={self.hotel_id}&cur={API_CURRENCY}'
+                f'&f-hotel-id={self.id}&cur={API_CURRENCY}'
             )
         except AttributeError as e:
             logger.error(
@@ -68,8 +68,8 @@ class HotelsApi(Api):
         """Parse dict data to Location instance."""
         try:
             location = Location(
-                destinationId=int(data['destinationId']),
-                geoId=int(data['geoId']),
+                destination_id=int(data['destinationId']),
+                geo_id=int(data['geoId']),
                 caption=data['caption'],
                 name=data['name']
             )
@@ -85,11 +85,11 @@ class HotelsApi(Api):
         """
         try:
             address = Address(
-                streetAddress=data['streetAddress'],
-                extendedAddress=data['extendedAddress'],
+                street_address=data['streetAddress'],
+                extended_address=data['extendedAddress'],
                 locality=data['locality'],
                 region=data['region'],
-                countryName=data['countryName']
+                country_name=data['countryName']
             )
             return address.data
         except (KeyError, ValueError) as e:
@@ -124,14 +124,14 @@ class HotelsApi(Api):
         """Parse dict data to ApiSearchResult instance."""
         try:
             try:
-                price_data = data['price']
-            except KeyError:
                 price_data = data['ratePlan']['price']['exactCurrent']
+            except KeyError:
+                price_data = data['price']
             return ApiSearchResult(
-                hotel_id=int(data['id']),
+                id=int(data['id']),
                 name=data['name'],
                 address=self._parse_address(data['address']),
-                starRating=int(data['starRating']),
+                star_rating=int(data['starRating']),
                 distance=self._parse_landmarks(data['landmarks']),
                 price=self._parse_price(price_data)
             )
@@ -141,7 +141,7 @@ class HotelsApi(Api):
     def _parse_hotel_photos(self, data: dict) -> HotelPhoto:
         """Parse dict data to HotelPhoto instance."""
         try:
-            return HotelPhoto(data['imageId'], data['baseUrl'])
+            return HotelPhoto(id=data['imageId'], url=data['baseUrl'])
         except (KeyError, ValueError) as e:
             raise self.ApiParseError(*e.args, data)
 
@@ -191,10 +191,10 @@ class HotelsApi(Api):
         url = f'{self._base_url}/properties/list'
         # prepare params
         params = {
-            'destinationId': str(user_session.locationId),
+            'destinationId': str(user_session.location_id),
             'pageSize': str(25),
-            'checkIn': str(user_session.checkIn),
-            'checkOut': str(user_session.checkOut),
+            'checkIn': str(user_session.check_in),
+            'checkOut': str(user_session.check_out),
             'adults1': '1',
             'locale': self._locale,
             'currency': self._currency
@@ -207,12 +207,12 @@ class HotelsApi(Api):
                 params['sortOrder'] = 'PRICE_HIGHEST_FIRST'
             case '/bestdeal':
                 params['sortOrder'] = 'DISTANCE_FROM_LANDMARK'
-                params['minPrice'] = int(user_session.priceMin)
-                params['maxPrice'] = int(user_session.priceMax)
+                params['minPrice'] = int(user_session.price_min)
+                params['maxPrice'] = int(user_session.price_max)
         # process requests
         page = 1
         results = []
-        while len(results) <= user_session.resultsNum:
+        while len(results) <= user_session.results_num:
             params['pageNumber'] = str(page)
             try:
                 data = self._get(url, params)
@@ -228,7 +228,7 @@ class HotelsApi(Api):
                 return results
             # parse results
             for result_data in results_data:
-                if len(results) >= user_session.resultsNum:
+                if len(results) >= user_session.results_num:
                     return results
                 try:
                     result = self._parse_search_result(result_data)
@@ -237,10 +237,10 @@ class HotelsApi(Api):
                         results.append(result)
                         continue
                     # check Hotel distance
-                    if user_session.distanceMin <= result.distance <= \
-                        user_session.distanceMax and \
-                        user_session.priceMin <= result.price <= \
-                            user_session.priceMax:
+                    if user_session.distance_min <= result.distance <= \
+                        user_session.distance_max and \
+                        user_session.price_min <= result.price <= \
+                            user_session.price_max:
                         results.append(result)
                 except self.ApiParseError:
                     pass

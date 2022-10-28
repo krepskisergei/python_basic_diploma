@@ -11,39 +11,39 @@ class UserSession:
     attrs = {
         'command': str,
         'id': int,
-        'queryTime': datetime,
-        'locationId': int,
-        'checkIn': date,
-        'checkOut': date,
-        'priceMin': float | int,
-        'priceMax': float | int,
-        'distanceMin': float | int,
-        'distanceMax': float | int,
-        'resultsNum': int,
-        'photosNum': int
+        'query_time': datetime,
+        'location_id': int,
+        'check_in': date,
+        'check_out': date,
+        'price_min': float | int,
+        'price_max': float | int,
+        'distance_min': float | int,
+        'distance_max': float | int,
+        'results_num': int,
+        'photos_num': int
     }
     id: int
-    queryTime: datetime
+    query_time: datetime
     command: str
-    locationId: int
-    checkIn: date
-    checkOut: date
-    priceMin: float
-    priceMax: float
-    distanceMin: float
-    distanceMax: float
-    resultsNum: int
-    photosNum: int
+    location_id: int
+    check_in: date
+    check_out: date
+    price_min: float
+    price_max: float
+    distance_min: float
+    distance_max: float
+    results_num: int
+    photos_num: int
 
-    def __init__(self, chatId: int, **kwargs) -> None:
-        self.chatId = chatId
+    def __init__(self, chat_id: int, **kwargs) -> None:
+        self.chat_id = chat_id
         if kwargs:
             self.set_attrs(kwargs)
 
     @property
     def data(self) -> list:
         """Return instance data in list."""
-        return [self.chatId]
+        return [self.chat_id]
 
     @property
     def current_step(self) -> str:
@@ -134,12 +134,12 @@ class UserSession:
         except AttributeError:
             raise UserSessionAttributeError(f'Attribute [{attr}] not set.')
 
-    def _check_checkIn(self) -> None:
+    def _check_check_in(self) -> None:
         """
-        Check attribute 'checkIn'.
+        Check attribute 'check_in'.
         Raise UserSessionAttributeError, UserSessionValueError on errors.
         """
-        attr = 'checkIn'
+        attr = 'check_in'
         try:
             value = self.__getattribute__(attr)
             if value >= date.today():
@@ -149,57 +149,27 @@ class UserSession:
         except AttributeError:
             raise UserSessionAttributeError(f'Attribute [{attr}] not set.')
 
-    def _check_checkOut(self) -> None:
+    def _check_check_out(self) -> None:
         """
-        Check attribute 'checkOut'.
+        Check attribute 'check_out'.
         Raise UserSessionAttributeError, UserSessionValueError on errors.
         """
-        attr = 'checkOut'
+        attr = 'check_out'
         try:
             value = self.__getattribute__(attr)
-            if value > self.checkIn:
+            if value > self.check_in:
                 return None
             raise UserSessionValueError(
                 f'Invalid attribute [{attr}] value: {value}.')
         except AttributeError:
             raise UserSessionAttributeError(f'Attribute [{attr}] not set.')
 
-    def _check_priceMin(self) -> None:
+    def _check_price_min(self) -> None:
         """
-        Check attribute 'priceMin'.
+        Check attribute 'price_min'.
         Raise UserSessionAttributeError, UserSessionValueError on errors.
         """
-        attr = 'priceMin'
-        try:
-            value = self.__getattribute__(attr)
-            if value >= 0:
-                return None
-            raise UserSessionValueError(
-                f'Invalid attribute [{attr}] value: {value}.')
-        except AttributeError:
-            raise UserSessionAttributeError(f'Attribute [{attr}] not set.')
-
-    def _check_priceMax(self) -> None:
-        """
-        Check attribute 'priceMax'.
-        Raise UserSessionAttributeError, UserSessionValueError on errors.
-        """
-        attr = 'priceMax'
-        try:
-            value = self.__getattribute__(attr)
-            if value >= self.priceMin:
-                return None
-            raise UserSessionValueError(
-                f'Invalid attribute [{attr}] value: {value}.')
-        except AttributeError:
-            raise UserSessionAttributeError(f'Attribute [{attr}] not set.')
-
-    def _check_distanceMin(self) -> None:
-        """
-        Check attribute 'distanceMax'.
-        Raise UserSessionAttributeError, UserSessionValueError on errors.
-        """
-        attr = 'distanceMin'
+        attr = 'price_min'
         try:
             value = self.__getattribute__(attr)
             if value >= 0:
@@ -209,27 +179,57 @@ class UserSession:
         except AttributeError:
             raise UserSessionAttributeError(f'Attribute [{attr}] not set.')
 
-    def _check_distanceMax(self) -> None:
+    def _check_price_max(self) -> None:
         """
-        Check attribute 'distanceMax'.
+        Check attribute 'price_max'.
         Raise UserSessionAttributeError, UserSessionValueError on errors.
         """
-        attr = 'distanceMax'
+        attr = 'price_max'
         try:
             value = self.__getattribute__(attr)
-            if value >= self.distanceMin:
+            if value >= self.price_min:
                 return None
             raise UserSessionValueError(
                 f'Invalid attribute [{attr}] value: {value}.')
         except AttributeError:
             raise UserSessionAttributeError(f'Attribute [{attr}] not set.')
 
-    def _check_resultsNum(self) -> None:
+    def _check_distance_min(self) -> None:
         """
-        Check attribute 'resultsNum'.
+        Check attribute 'distance_min'.
         Raise UserSessionAttributeError, UserSessionValueError on errors.
         """
-        attr = 'resultsNum'
+        attr = 'distance_min'
+        try:
+            value = self.__getattribute__(attr)
+            if value >= 0:
+                return None
+            raise UserSessionValueError(
+                f'Invalid attribute [{attr}] value: {value}.')
+        except AttributeError:
+            raise UserSessionAttributeError(f'Attribute [{attr}] not set.')
+
+    def _check_distance_max(self) -> None:
+        """
+        Check attribute 'distance_max'.
+        Raise UserSessionAttributeError, UserSessionValueError on errors.
+        """
+        attr = 'distance_max'
+        try:
+            value = self.__getattribute__(attr)
+            if value >= self.distance_min:
+                return None
+            raise UserSessionValueError(
+                f'Invalid attribute [{attr}] value: {value}.')
+        except AttributeError:
+            raise UserSessionAttributeError(f'Attribute [{attr}] not set.')
+
+    def _check_results_num(self) -> None:
+        """
+        Check attribute 'results_num'.
+        Raise UserSessionAttributeError, UserSessionValueError on errors.
+        """
+        attr = 'results_num'
         from app.config import MAX_RESULTS
 
         try:
@@ -241,12 +241,12 @@ class UserSession:
         except AttributeError:
             raise UserSessionAttributeError(f'Attribute [{attr}] not set.')
 
-    def _check_photosNum(self) -> None:
+    def _check_photos_num(self) -> None:
         """
-        Check attribute 'resultsNum'.
+        Check attribute 'photos_num'.
         Raise UserSessionAttributeError, UserSessionValueError on errors.
         """
-        attr = 'photosNum'
+        attr = 'photos_num'
         from app.config import MAX_PHOTOS
 
         try:

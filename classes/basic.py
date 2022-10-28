@@ -4,8 +4,8 @@ from dataclasses import dataclass
 @dataclass(frozen=False)
 class Location:
     """Dataclass for Location from API and database."""
-    destinationId: int
-    geoId: int
+    destination_id: int
+    geo_id: int
     caption: str
     name: str
     name_lower: str = ''
@@ -22,8 +22,8 @@ class Location:
         """Return instance data in list."""
         self._format_content()
         return [
-            self.destinationId,
-            self.geoId,
+            self.destination_id,
+            self.geo_id,
             self.caption,
             self.name,
             self.name_lower
@@ -33,11 +33,11 @@ class Location:
 @dataclass(frozen=True)
 class Address:
     """Dataclass for Hotel address from API."""
-    streetAddress: str
-    extendedAddress: str
+    street_address: str
+    extended_address: str
     locality: str
     region: str
-    countryName: str
+    country_name: str
     # TODO: add all attributes from API responce
 
     @property
@@ -47,11 +47,11 @@ class Address:
         Data order according set order.
         """
         order_attrs = (
-            'streetAddress',
-            'extendedAddress',
+            'street_address',
+            'extended_address',
             'locality',
             'region',
-            'countryName'
+            'country_name'
         )
         data_list = []
         for _attr in order_attrs:
@@ -70,7 +70,7 @@ class Hotel:
     id: int
     name: str
     address: str
-    starRating: int
+    star_rating: int
     distance: float | None
 
     @property
@@ -79,8 +79,8 @@ class Hotel:
         return [
             self.id,
             self.name,
-            self.fullAddress,
-            self.starRating,
+            self.address,
+            self.star_rating,
             self.distance
         ]
 
@@ -91,15 +91,15 @@ class HotelPhoto:
     Dataclass for hotel photos from API and database.
     Use format_url() before use data from instance.
     """
-    imageId: int
-    baseUrl: str
+    id: int
+    url: str
 
     @property
     def data(self) -> list:
         """Return instance data in list."""
         return [
-            self.imageId,
-            self.baseUrl
+            self.id,
+            self.url
         ]
 
     # TODO: change format_url to method output(suffix: str)
@@ -108,13 +108,13 @@ class HotelPhoto:
 
     def format_url(self, suffix: str) -> None:
         """Replace {size} to suffix in baseUrl."""
-        self.baseUrl = self.baseUrl.replace('{size}', suffix)
+        self.url = self.url.replace('{size}', suffix)
 
 
 @dataclass(frozen=True)
 class SearchResult:
-    sessionId: int
-    hotelId: int
+    session_id: int
+    hotel_id: int
     url: str
     price: float
 
@@ -122,7 +122,8 @@ class SearchResult:
     def data(self) -> list:
         """Return instance data in list."""
         return [
-            self.sessionId,
-            self.hotelId,
+            self.session_id,
+            self.hotel_id,
+            self.url,
             self.price
         ]
