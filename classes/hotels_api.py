@@ -189,10 +189,11 @@ class HotelsApi(Api):
             self, user_session: UserSession) -> list[ApiSearchResult]:
         """Return ApiSearchResult instances list by API request result."""
         url = f'{self._base_url}/properties/list'
+        page_size = 25
         # prepare params
         params = {
             'destinationId': str(user_session.location_id),
-            'pageSize': str(25),
+            'pageSize': str(page_size),
             'checkIn': str(user_session.check_in),
             'checkOut': str(user_session.check_out),
             'adults1': '1',
@@ -211,8 +212,9 @@ class HotelsApi(Api):
                 params['maxPrice'] = int(user_session.price_max)
         # process requests
         page = 1
+        result_counter = 0
         results = []
-        while len(results) <= user_session.results_num:
+        while True:
             params['pageNumber'] = str(page)
             try:
                 data = self._get(url, params)
@@ -220,16 +222,19 @@ class HotelsApi(Api):
                 break
             # get results
             try:
+                results_num = int(
+                    data['data']['body']['searchResults']['totalCount'])
                 results_data = data['data']['body']['searchResults']['results']
             except KeyError as e:
                 logger.error(
                     f"get_search_results error [{' '.join(map(str, *e.args))}]"
                 )
-                return results
+                break
             # parse results
             for result_data in results_data:
                 if len(results) >= user_session.results_num:
                     return results
+                result_counter += 1
                 try:
                     result = self._parse_search_result(result_data)
                     result.add_session(user_session)
@@ -245,6 +250,9 @@ class HotelsApi(Api):
                 except self.ApiParseError:
                     pass
             page += 1
+            # check last page
+            if result_counter // page_size >= results_num // page_size:
+                break
         return results
 
     def get_hotel_photos(
