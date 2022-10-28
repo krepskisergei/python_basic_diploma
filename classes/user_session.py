@@ -15,10 +15,10 @@ class UserSession:
         'location_id': int,
         'check_in': date,
         'check_out': date,
-        'price_min': float | int,
-        'price_max': float | int,
-        'distance_min': float | int,
-        'distance_max': float | int,
+        'price_min': float,
+        'price_max': float,
+        'distance_min': float,
+        'distance_max': float,
         'results_num': int,
         'photos_num': int
     }
@@ -47,12 +47,17 @@ class UserSession:
 
     @property
     def current_step(self) -> str:
-        """Get instance current step."""
+        """
+        Return instance current step. 'complete' on fullfill.
+        """
         attrs = list(self.attrs.keys())
         attrs.reverse()
+
         for _attr in attrs:
             try:
                 self.__getattribute__(_attr)
+                if _attr == attrs[0]:
+                    return 'complete'
                 return attrs[attrs.index(_attr) - 1]
             except AttributeError:
                 pass
