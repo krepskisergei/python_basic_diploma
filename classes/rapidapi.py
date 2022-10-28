@@ -24,6 +24,8 @@ class Api:
 
     def _get(self, url: str, params: dict, method: str = 'GET') -> dict:
         """Return response result from url by method."""
+        logger.debug(
+            f"rapidapi _get call [{' '.join(map(str, params.values()))}]")
         try:
             response = request(
                 method=method,
