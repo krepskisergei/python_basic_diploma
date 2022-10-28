@@ -3,7 +3,7 @@ from datetime import datetime, date
 from telebot.types import InlineKeyboardMarkup, ReplyKeyboardMarkup
 
 from app.app_logger import get_logger
-from app.config import DB_ENGINE
+from app.config import DB_ENGINE, API_CURRENCY
 import bot.dialog as d
 from classes.basic import Hotel, HotelPhoto, Location
 from classes.database import DB
@@ -16,9 +16,21 @@ logger = get_logger(__name__)
 # initiate database and api
 db = DB(DB_ENGINE)
 api = HotelsApi()
+# fix constants
+BTN_MAX = 3  # max button number in ReplyKeyboard
+UNITS = {
+    'price': API_CURRENCY,
+    'distance': 'км'
+}
+CAL_IDS = {
+    'check_in': 0,
+    'check_out': 1
+}
 
 
 # Classes
+# TODO: move ReplyMessage in handlers
+# TODO: add method fo ReplyMessage processing
 @dataclass(frozen=True)
 class ReplyMessage:
     """Dataclass for reply messages."""
@@ -27,6 +39,7 @@ class ReplyMessage:
     text: str = None
     markup: ReplyKeyboardMarkup | InlineKeyboardMarkup = None
     media: list = None
+    next_handler: bool = True
 
 
 # Validator
@@ -124,23 +137,144 @@ def update_session(session: UserSession, message: str) -> UserSession:
     return db.update_session(session, updated_attrs)
 
 
-# processors
-def process_location_id(
-        session: UserSession, message: str) -> list[ReplyMessage]:
-    """Return list of ReplyMessage instances by proceccing location id."""
-    attr_name = 'location_id'
-    locations = get_locations(message, 3)
-    if len(locations) == 0:
-        try:
-            text = d.__getattribute__(attr_name)
-        except AttributeError:
+# dialogs
+def get_dialog(attr_name: str, placeholder: list | tuple = None) -> str:
+    """Return dialog bt attr_name formated by placeholder."""
+    try:
+        dialog: str = d.__getattribute__(attr_name.upper())
+        if placeholder is None:
+            return dialog
+        return dialog.format(*placeholder)
+    except AttributeError as e:
+        logger.debug(f"get_dialog error [{' '.join(map(str, *e.args))}]")
+        return d.UNKNOWN_ERROR
+
+
+# generators
+def skip_attrs(session: UserSession) -> None:
+    """Fill some attributes by 0 by command."""
+    skip_commands = ('/lowprice', '/highprice')
+    skip_steps = {
+        'price_min': 0.0,
+        'price_max': 0.0,
+        'distance_min': 0.0,
+        'distance_max': 0.0,
+    }
+    if session.command in skip_commands:
+        updated_attrs = session.set_attrs(skip_steps)
+        if len(skip_steps) == len(updated_attrs):
+            db.update_session(session, updated_attrs)
+
+
+def generate_calendar(session: UserSession) -> list[ReplyMessage]:
+    """Return list of ReplyMessage instances with calendar."""
+    pass
+
+
+def generate_results(session: UserSession) -> list[ReplyMessage]:
+    """Return list of ReplyMessage instances by search result"""
+    pass
+
+
+def generate_start(session: UserSession) -> list[ReplyMessage]:
+    """Return list of ReplyMessage instances for start reply."""
+    attr_name = session.current_step
+    match attr_name:
+        case 'check_in':
             pass
-        return [ReplyMessage(chat_id=session.chat_id, text=text)]
+        case 'check_out':
+            pass
+        case 'complete':
+            return generate_results(session)
+        case _:
+            return [
+                ReplyMessage(session.chat_id, get_dialog(f'{attr_name}_START'))
+            ]
+
+
+# additional processors
+def process_location_id(
+        session: UserSession, message: str) -> ReplyMessage:
+    """Return ReplyMessage instances by proceccing location_id."""
+    attr_name = 'location_id'
+    locations = get_locations(message, BTN_MAX)
+    # check :64 symbols equals
+    for location in locations:
+        if location.caption[:64] == message:
+            locations = [location]
+            break
+    # check results
+    match len(locations):
+        case 0:
+            # no results
+            return ReplyMessage(
+                session.chat_id, text=get_dialog(f'{attr_name}_WRONG'))
+        case 1:
+            # one result
+            try:
+                value = locations[0].destination_id
+                session = update_session(session, str(value))
+                return ReplyMessage(
+                    session.chat_id,
+                    text=get_dialog(
+                        f'{attr_name}_COMPLETE', [locations[0].caption]))
+            except ValueError:
+                return ReplyMessage(session.chat_id, text=d.UNKNOWN_ERROR)
+        case _:
+            # many results
+            markup = ReplyKeyboardMarkup(one_time_keyboard=True)
+            for location in locations[:BTN_MAX]:
+                markup.add(location.caption[:64])
+            return ReplyMessage(session.chat_id, markup=markup)
+
+
+def process_date_or_float(session: UserSession, message: str) -> ReplyMessage:
+    """Return ReplyMessage instances by proceccing dates."""
+    attr_name: str = session.current_step
+    try:
+        session = update_session(session, message)
+        placeholder = [session.__getattribute__(attr_name)]
+        for name, value in UNITS.items():
+            if attr_name.find(name) >= 0:
+                placeholder.append(value)
+        return ReplyMessage(
+            session.chat_id,
+            text=get_dialog(f'{attr_name}_COMPLETE', placeholder))
+    except ValueError:
+        return ReplyMessage(
+            session.chat_id, text=get_dialog(f'{attr_name}_WRONG'))
+
+
+# main processors
+def process_command(chat_id: int, command: str) -> list[ReplyMessage]:
+    """Return list of ReplyMessage instances by command from chat_id."""
+    session = get_session_bychatid(chat_id, command)
+    # wrong command in message
+    if session is None:
+        return [ReplyMessage(chat_id, d.ERROR_CONTENT)]
+    replies = [ReplyMessage(chat_id, get_dialog(f'command_{command}'))]
+    replies += generate_start(session)
+    return replies
 
 
 def process_message(chat_id: int, message: str) -> list[ReplyMessage]:
     """Return list of ReplyMessage instances by message from chat_id."""
     session = get_session_bychatid(chat_id, message)
-    # no active session and wrong command in message
+    # no active session
     if session is None:
-        return [ReplyMessage(chat_id=chat_id, text='Нах')]
+        return [ReplyMessage(chat_id, d.ERROR_CONTENT)]
+    replies = []
+    match session.current_step:
+        case 'location_id':
+            replies.append(process_location_id(session, message))
+        case _:
+            # check_in, check_out
+            # price_min, price_max
+            # distance_min, distance_max
+            replies.append(process_date_or_float(session, message))
+            # skip attrs
+            skip_attrs(session)
+    # update session
+    session = get_session_bychatid(chat_id)
+    replies += generate_start(session)
+    return replies
