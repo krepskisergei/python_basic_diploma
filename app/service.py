@@ -194,7 +194,10 @@ def process_location_id(
         case 0:
             # no results
             return ReplyMessage(
-                session.chat_id, text=get_dialog(f'{attr_name}_WRONG'))
+                session.chat_id,
+                text=get_dialog(f'{attr_name}_WRONG'),
+                next_handler=False
+            )
         case 1:
             # one result
             try:
@@ -203,9 +206,12 @@ def process_location_id(
                 return ReplyMessage(
                     session.chat_id,
                     text=get_dialog(
-                        f'{attr_name}_COMPLETE', [locations[0].caption]))
+                        f'{attr_name}_COMPLETE', [locations[0].caption]),
+                    next_handler=False
+                    )
             except ValueError:
-                return ReplyMessage(session.chat_id, text=d.UNKNOWN_ERROR)
+                return ReplyMessage(
+                    session.chat_id, text=d.UNKNOWN_ERROR, next_handler=False)
         case _:
             # many results
             markup = ReplyKeyboardMarkup(one_time_keyboard=True)
@@ -225,10 +231,14 @@ def process_date_or_float(session: UserSession, message: str) -> ReplyMessage:
                 placeholder.append(value)
         return ReplyMessage(
             session.chat_id,
-            text=get_dialog(f'{attr_name}_COMPLETE', placeholder))
+            text=get_dialog(f'{attr_name}_COMPLETE', placeholder),
+            next_handler=False)
     except ValueError:
         return ReplyMessage(
-            session.chat_id, text=get_dialog(f'{attr_name}_WRONG'))
+            session.chat_id,
+            text=get_dialog(f'{attr_name}_WRONG'),
+            next_handler=False
+        )
 
 
 # main processors
@@ -248,7 +258,7 @@ def process_message(chat_id: int, message: str) -> list[ReplyMessage]:
     session = get_session_bychatid(chat_id, message)
     # no active session
     if session is None:
-        return [ReplyMessage(chat_id, d.ERROR_CONTENT)]
+        return [ReplyMessage(chat_id, d.ERROR_CONTENT, next_handler=False)]
     replies = []
     match session.current_step:
         case 'location_id':
