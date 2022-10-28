@@ -265,7 +265,7 @@ class DB(DBConnector):
             return None
         return self.get_active_session(session.chat_id)
 
-    def update_sessions(
+    def update_session(
             self, session: UserSession, attrs: dict) -> UserSession:
         """
         Update UserSession attribute values by attrs.

@@ -28,42 +28,20 @@ if __name__ == '__main__':
         logger.debug('Debug.')
         logger.info('Application starts.')
 
-        from classes.user_session import UserSession
-        from datetime import date, datetime
         import app.service as s
+        from datetime import date
 
-        command = input('Enter command: ')
-
-        session = UserSession(100, **{'command': command})
-
-        location_name = input('Enter location: ')
-
-        locations = s.get_locations(location_name)
-
-        session_dict = {
-            'id': 100,
-            'query_time': datetime.now(),
-            'location_id': locations[0].destination_id,
-            'check_in': date(2022, 12, 15),
-            'check_out': date(2022, 12, 18),
-            'price_min': 5000,
-            'price_max': 8000,
-            'distance_min': 0.5,
-            'distance_max': 1,
-            'results_num': 3,
+        session = s.get_session_bychatid(1)
+        attrs = {
+            'location_id': 123,
+            'check_in': date(2022, 11, 1),
+            'check_out': date(2022, 11, 3),
+            'price_min': 0.0,
+            'price_max': 0.0,
+            'distance_min': 0.0,
+            'distance_max': 0.0,
+            'results_num': 4,
             'photos_num': 0
         }
-        session.set_attrs(session_dict)
-
-        results = s.api.get_search_results(session)
-        print(f'Found {len(results)} results:')
-        for result in results:
-            print('#' * 20)
-            print(result.hotel)
-            print('-' * 10)
-            print(result.search_result)
-        if len(results) > 0:
-            photos = s.get_hotel_photos(results[0], 3)
-            print('*' * 20)
-            for _p in photos:
-                print(_p)
+        print(session.set_attrs(attrs))
+        print(session.current_step)
