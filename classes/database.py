@@ -263,7 +263,7 @@ class DB(DBConnector):
             self._update(q, values)
         except (self.DBDataError, self.DBUniqueError):
             return None
-        return self.get_active_session(session.chatId)
+        return self.get_active_session(session.chat_id)
 
     def update_sessions(
             self, session: UserSession, attrs: dict) -> UserSession:
