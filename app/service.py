@@ -1,4 +1,4 @@
-from datetime import datetime, date, timedelta
+from datetime import date, timedelta
 from telebot.types import (
     ReplyKeyboardMarkup, CallbackQuery)  # , InlineKeyboardMarkup
 from telegram_bot_calendar import WMonthTelegramCalendar as TCal
@@ -73,28 +73,6 @@ CAL_IDS = {
 }
 
 
-# Validator
-def validator(message: str, valid_class: type) -> object:
-    """
-    Return message in valid_class type.
-    Else raise ValueError.
-    """
-    if isinstance(message, valid_class):
-        return message
-    # int
-    if valid_class == int:
-        message = message.replace('.', '').replace(',', '').replace(' ', '')
-        return int(message)
-    if valid_class == float:
-        message = message.replace(',', '.').replace(' ', '')
-        return float(message)
-    if valid_class == date:
-        return datetime.strptime(message, '%Y-%m-%d').date()
-    if valid_class == datetime:
-        return datetime.strptime(message, '%Y-%m-%d %H:%M:%S')
-    raise ValueError('validator error', message, valid_class)
-
-
 # Api and database unify methods
 def get_locations(location_name: str, limit: int = 0) -> list[Location]:
     """Return Location instances list by database and Api responces."""
@@ -153,17 +131,17 @@ def get_session_bychatid(chat_id: int, message: str = None) -> UserSession:
     return db.add_session(session)
 
 
-def update_session(session: UserSession, message: str) -> UserSession:
+def update_session_byvalue(
+        session: UserSession, value: object) -> UserSession:
     """
-    Return updated by msg UserSession instance.
+    Return updated by value UserSession instance.
     Raise ValueError on update failed.
     """
     current_step = session.current_step
-    valid_class = session.attrs[current_step]
-    attrs = {current_step: validator(message, valid_class)}
+    attrs = {current_step: value}
     updated_attrs = session.set_attrs(attrs)
     if len(updated_attrs) == 0:
-        logger.warning(f"update_session error: {session.chat_id} {message}")
+        logger.warning(f"update_session error: {session.chat_id} {str(value)}")
         raise ValueError()
     return db.update_session(session, updated_attrs)
 
@@ -266,7 +244,7 @@ def process_location_id(
             # one result
             try:
                 value = locations[0].destination_id
-                session = update_session(session, str(value))
+                session = update_session_byvalue(session, value)
                 return ReplyMessage(
                     session.chat_id,
                     text=get_dialog(
@@ -293,7 +271,7 @@ def process_date_or_float(session: UserSession, message: str) -> ReplyMessage:
     """Return ReplyMessage instances by proceccing dates."""
     attr_name: str = session.current_step
     try:
-        session = update_session(session, message)
+        session = update_session_byvalue(session, message)
         placeholder = [session.__getattribute__(attr_name)]
         for name, value in UNITS.items():
             if attr_name.find(name) >= 0:
@@ -380,7 +358,7 @@ def process_callback(callback: CallbackQuery) -> list[ReplyMessage]:
             edit_message_id=callback.message.message_id)]
     if result:
         try:
-            session = update_session(session, str(result))
+            session = update_session_byvalue(session, result)
             try:
                 value: date = session.__getattribute__(attr_name)
                 value = value.strftime('%d.%m.%Y')

@@ -64,6 +64,47 @@ class UserSession:
         else:
             return attrs[-1]
 
+    # validator
+    def _validator(self, attr_name: str, attr_value: object) -> object:
+        """
+        Return attr_value in attr_name type.
+        Raise UserSessionValue error on failed.
+        """
+        attr_type = self.attrs.get(attr_name, None)
+        # invalid attribute name
+        if attr_type is None:
+            raise UserSessionAttributeError(
+                f'Invalid attribute name [{attr_name}].')
+        # attribute value have correct type
+        if isinstance(attr_value, attr_type):
+            return attr_value
+        # convert attr_value
+        try:
+            if attr_type == str:
+                return str(attr_value)
+            if attr_type == int:
+                attr_value = attr_value.replace('.', '').replace(
+                    ',', '').replace(' ', '')
+                return int(attr_value)
+            if attr_type == bool:
+                if isinstance(attr_value, str):
+                    attr_value = attr_value.replace('.', '').replace(
+                        ',', '').replace(' ', '')
+                    return bool(int(attr_value))
+                return bool(attr_value)
+            if attr_type == float:
+                attr_value = attr_value.replace(',', '.').replace(' ', '')
+                return float(attr_value)
+            if attr_type == date:
+                return datetime.strptime(attr_value, '%Y-%m-%d').date()
+            if attr_type == datetime:
+                return datetime.strptime(attr_value, '%Y-%m-%d %H:%M:%S')
+        except ValueError as e:
+            raise UserSessionValueError(
+                    f'Invalid {attr_name} attribute value type [{attr_value}]',
+                    type(attr_value), attr_type, *e.args
+                )
+
     # setters
     def set_attrs(self, attr_dict: dict) -> dict:
         """
@@ -95,17 +136,11 @@ class UserSession:
             if self.current_step != attr_name:
                 raise UserSessionAttributeError(
                     f'Attribute [{attr_name}] setting order error.')
-            # check types
-            attr_type = self.attrs.get(attr_name, None)
-            if attr_type is None:
-                # invalid attribute name
-                raise UserSessionAttributeError(
-                    f'Invalid attribute name [{attr_name}].')
-            if not isinstance(attr_value, attr_type):
-                raise UserSessionValueError(
-                    f'Invalid {attr_name} attribute value type [{attr_value}]',
-                    type(attr_value), attr_type
-                )
+            # validate types
+            try:
+                attr_value = self._validator(attr_name, attr_value)
+            except (UserSessionAttributeError, UserSessionValueError):
+                return False
             # Set attribute value to instance
             self.__setattr__(attr_name, attr_value)
             # checker
