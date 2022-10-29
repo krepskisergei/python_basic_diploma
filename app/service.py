@@ -1,8 +1,12 @@
-from datetime import datetime, date
-from telebot.types import ReplyKeyboardMarkup  # , InlineKeyboardMarkup
+from datetime import datetime, date, timedelta
+from telebot.types import (
+    ReplyKeyboardMarkup, CallbackQuery)  # , InlineKeyboardMarkup
+from telegram_bot_calendar import WMonthTelegramCalendar as TCal
 
 from app.app_logger import get_logger
-from app.config import DB_ENGINE, API_CURRENCY
+from app.config import (
+    API_LOCALE, DB_ENGINE, API_CURRENCY, MAX_RESULTS, MAX_PHOTOS)
+# MAX_HISTORY
 import bot.dialog as d
 from classes.basic import Hotel, HotelPhoto, Location
 from classes.database import DB
@@ -10,6 +14,47 @@ from classes.hotels_api import HotelsApi
 from classes.tbot import ReplyMessage
 from classes.user_session import UserSession
 
+"""
+TODO:
+При выборе даты сохраняет в БД правильно, но выдает Ooooppps. Ошибка.
+Для /highprice запросило минимальную цену
+
+😖 Ooooppps. Ошибка. 🤭
+
+💰 Введите минимальную цену:
+
+Sergei Krepski, [29 Oct 2022, 15:54:28]:
+0
+
+sb_too_easy_travel, [29 Oct 2022, 15:54:28]:
+Минимальная цена 💰 0.00 RUB.
+
+Минимальная цена 💰 0.00 RUB.
+
+💰 Введите максимальную цену:
+
+💰 Введите максимальную цену:
+
+Максимальная цена 💰 0.00 RUB.
+
+📏 Введите минимальное расстояние от центра города:
+
+Sergei Krepski, [29 Oct 2022, 15:54:56]:
+10
+
+sb_too_easy_travel, [29 Oct 2022, 15:54:57]:
+Минимальное расстояние от центра города 📏 10.0 км.
+
+Максимальная удаленность от центра города 📏 10.0.
+
+📏 Введите максимальную удаленность от центра города:
+
+❌ Количество должно быть числом больше нуля. Поробуйте еще раз.
+
+📝 Введите количество результатов (не больше 5):
+
+📝 Введите количество результатов (не больше 5):
+"""
 
 # initiate logger
 logger = get_logger(__name__)
@@ -154,12 +199,25 @@ def skip_attrs(session: UserSession) -> None:
 
 def generate_calendar(session: UserSession) -> list[ReplyMessage]:
     """Return list of ReplyMessage instances with calendar."""
-    pass
+    current_step = session.current_step
+    if current_step not in CAL_IDS.keys():
+        return []
+    min_date = date.today()
+    if CAL_IDS[current_step] > 0:
+        min_date = session.check_in + timedelta(days=1)
+    calendar, step = TCal(
+        calendar_id=CAL_IDS[current_step],
+        current_date=min_date,
+        min_date=min_date,
+        locale=API_LOCALE.split('_')[0]
+    ).build()
+    return [ReplyMessage(
+        session.chat_id, get_dialog(f'{current_step}_START'), markup=calendar)]
 
 
 def generate_results(session: UserSession) -> list[ReplyMessage]:
     """Return list of ReplyMessage instances by search result"""
-    pass
+    return [ReplyMessage(session.chat_id, 'Результаты', next_handler=False)]
 
 
 def generate_start(session: UserSession) -> list[ReplyMessage]:
@@ -167,11 +225,17 @@ def generate_start(session: UserSession) -> list[ReplyMessage]:
     attr_name = session.current_step
     match attr_name:
         case 'check_in':
-            return []
+            return generate_calendar(session)
         case 'check_out':
-            return []
+            return generate_calendar(session)
         case 'complete':
             return generate_results(session)
+        case 'results_num':
+            return [ReplyMessage(session.chat_id, get_dialog(
+                f'{attr_name}_START', [MAX_RESULTS]))]
+        case 'photos_num':
+            return [ReplyMessage(session.chat_id, get_dialog(
+                f'{attr_name}_START', [MAX_PHOTOS]))]
         case _:
             return [
                 ReplyMessage(session.chat_id, get_dialog(f'{attr_name}_START'))
@@ -278,6 +342,60 @@ def process_message(chat_id: int, message: str) -> list[ReplyMessage]:
             replies.append(process_date_or_float(session, message))
             # skip attrs
             skip_attrs(session)
+    # update session
+    session = get_session_bychatid(chat_id)
+    if replies[-1].clarify:
+        return replies
+    replies += generate_start(session)
+    return replies
+
+
+def process_callback(callback: CallbackQuery) -> list[ReplyMessage]:
+    """Return list of ReplyMessage instances by callback."""
+    chat_id = callback.message.chat.id
+    message = callback.message.text
+    session = get_session_bychatid(chat_id, message)
+    # no active session
+    if session is None:
+        return [ReplyMessage(chat_id, d.ERROR_CONTENT, next_handler=False)]
+    attr_name = session.current_step
+    if attr_name not in CAL_IDS.keys():
+        return [ReplyMessage(chat_id, d.ERROR_CONTENT, next_handler=False)]
+    replies = []
+    min_date = date.today()
+    if CAL_IDS[attr_name] > 0:
+        min_date = session.check_in + timedelta(days=1)
+    result, key, step = TCal(
+        calendar_id=CAL_IDS[attr_name],
+        current_date=min_date,
+        min_date=min_date,
+        locale=API_LOCALE.split('_')[0]
+    ).process(callback.data)
+    if not result and key:
+        return [ReplyMessage(
+            chat_id,
+            get_dialog(f'{attr_name}_START'),
+            markup=key,
+            next_handler=False,
+            edit_message_id=callback.message.message_id)]
+    if result:
+        try:
+            session = update_session(session, str(result))
+            try:
+                value: date = session.__getattribute__(attr_name)
+                value = value.strftime('%d.%m.%Y')
+            except ValueError as e:
+                logger.debug(
+                    f"process_callback error [{' '.join(map(str, *e.args))}]")
+                value = ''
+            placeholder = [value]
+            replies.append(ReplyMessage(
+                chat_id, get_dialog(attr_name, placeholder),
+                next_handler=False))
+        except ValueError:
+            replies.append(ReplyMessage(
+                chat_id, get_dialog(f'{attr_name}_WRONG'),
+                next_handler=False))
     # update session
     session = get_session_bychatid(chat_id)
     if replies[-1].clarify:

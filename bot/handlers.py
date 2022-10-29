@@ -54,7 +54,7 @@ def main_commands(message: Message) -> None:
     """Process main commands."""
     bot.send_chat_action(message.chat.id, 'typing')
     replies = s.process_command(message.chat.id, message.text)
-    bot.send_reply_message(replies)
+    bot.send_reply_messages(replies)
     if replies[-1].next_handler:
         bot.register_next_step_handler_by_chat_id(
             message.chat.id, bot_next_handler)
@@ -64,13 +64,23 @@ def main_commands(message: Message) -> None:
 @bot.callback_query_handler(func=TCal.func(calendar_id=0))
 def calendar_check_in(callback: CallbackQuery) -> None:
     """"""
-    pass
+    bot.send_chat_action(callback.message.chat.id, 'typing')
+    replies = s.process_callback(callback)
+    bot.send_reply_messages(replies)
+    if replies[-1].next_handler:
+        bot.register_next_step_handler_by_chat_id(
+            callback.message.chat.id, bot_next_handler)
 
 
 @bot.callback_query_handler(func=TCal.func(calendar_id=1))
 def calendar_check_out(callback: CallbackQuery) -> None:
     """"""
-    pass
+    bot.send_chat_action(callback.message.chat.id, 'typing')
+    replies = s.process_callback(callback)
+    bot.send_reply_messages(replies)
+    if replies[-1].next_handler:
+        bot.register_next_step_handler_by_chat_id(
+            callback.message.chat.id, bot_next_handler)
 
 
 # Next handlers and text messages handlers
@@ -79,7 +89,7 @@ def bot_next_handler(message: Message) -> None:
     """Next handler for all proceccing commands."""
     bot.send_chat_action(message.chat.id, 'typing')
     replies = s.process_message(message.chat.id, message.text)
-    bot.send_reply_message(replies)
+    bot.send_reply_messages(replies)
     if replies[-1].next_handler:
         bot.register_next_step_handler_by_chat_id(
             message.chat.id, bot_next_handler)

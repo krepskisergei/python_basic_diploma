@@ -22,7 +22,7 @@ class ReplyMessage:
 
 
 class TBot(TeleBot):
-    def send_reply_message(self, replies: list[ReplyMessage]):
+    def send_reply_messages(self, replies: list[ReplyMessage]):
         for reply in replies:
             if reply.media is not None:
                 # send media group
