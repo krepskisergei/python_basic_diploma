@@ -73,7 +73,8 @@ def calendar_check_out(callback: CallbackQuery) -> None:
     pass
 
 
-# Next handlers
+# Next handlers and text messages handlers
+@bot.message_handler(content_types=['text'])
 def bot_next_handler(message: Message) -> None:
     """Next handler for all proceccing commands."""
     bot.send_chat_action(message.chat.id, 'typing')

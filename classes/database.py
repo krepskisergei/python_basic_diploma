@@ -59,7 +59,7 @@ class DB(DBConnector):
         )
         if limit > 0:
             q += f" LIMIT {limit}"
-        caption = name.lower().title()
+        caption = f'%{name}%'
         try:
             response = self._select_all(q, [caption], {})
         except self.DBError:

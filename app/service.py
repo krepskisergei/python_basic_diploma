@@ -167,9 +167,9 @@ def generate_start(session: UserSession) -> list[ReplyMessage]:
     attr_name = session.current_step
     match attr_name:
         case 'check_in':
-            pass
+            return []
         case 'check_out':
-            pass
+            return []
         case 'complete':
             return generate_results(session)
         case _:
@@ -217,7 +217,12 @@ def process_location_id(
             markup = ReplyKeyboardMarkup(one_time_keyboard=True)
             for location in locations[:BTN_MAX]:
                 markup.add(location.caption[:64])
-            return ReplyMessage(session.chat_id, markup=markup)
+            return ReplyMessage(
+                session.chat_id,
+                d.LOCATION_ID_CLARIFY,
+                markup=markup,
+                clarify=True
+            )
 
 
 def process_date_or_float(session: UserSession, message: str) -> ReplyMessage:
@@ -248,7 +253,10 @@ def process_command(chat_id: int, command: str) -> list[ReplyMessage]:
     # wrong command in message
     if session is None:
         return [ReplyMessage(chat_id, d.ERROR_CONTENT)]
-    replies = [ReplyMessage(chat_id, get_dialog(f'command_{command}'))]
+    replies = [ReplyMessage(
+        chat_id, get_dialog(f"COMMAND_{command.replace('/', '')}"))]
+    if replies[-1].clarify:
+        return replies
     replies += generate_start(session)
     return replies
 
@@ -272,5 +280,7 @@ def process_message(chat_id: int, message: str) -> list[ReplyMessage]:
             skip_attrs(session)
     # update session
     session = get_session_bychatid(chat_id)
+    if replies[-1].clarify:
+        return replies
     replies += generate_start(session)
     return replies

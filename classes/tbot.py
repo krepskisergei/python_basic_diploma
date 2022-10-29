@@ -13,11 +13,12 @@ logger = get_logger(__name__)
 class ReplyMessage:
     """Dataclass for reply messages."""
     chat_id: int
-    edit_message_id: int = None
     text: str = None
     markup: ReplyKeyboardMarkup | InlineKeyboardMarkup = None
     media: list = None
     next_handler: bool = True
+    edit_message_id: int = None
+    clarify: bool = False
 
 
 class TBot(TeleBot):
@@ -40,6 +41,6 @@ class TBot(TeleBot):
             else:
                 self.send_message(
                     chat_id=reply.chat_id,
-                    text=reply.chat_id,
+                    text=reply.text,
                     reply_markup=reply.markup
                 )
