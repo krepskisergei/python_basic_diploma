@@ -1,11 +1,12 @@
 from datetime import date, timedelta
 from telebot.types import (
-    ReplyKeyboardMarkup, CallbackQuery)  # , InlineKeyboardMarkup
+    ReplyKeyboardMarkup, CallbackQuery,
+    InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto)
 from telegram_bot_calendar import WMonthTelegramCalendar as TCal
 
 from app.app_logger import get_logger
 from app.config import (
-    API_LOCALE, DB_ENGINE, API_CURRENCY, MAX_RESULTS, MAX_PHOTOS)
+    API_LOCALE, DB_ENGINE, API_CURRENCY, MAX_RESULTS, MAX_PHOTOS, IMAGE_SUFFIX)
 # MAX_HISTORY
 import bot.dialog as d
 from classes.basic import Hotel, HotelPhoto, Location
@@ -14,47 +15,6 @@ from classes.hotels_api import HotelsApi
 from classes.tbot import ReplyMessage
 from classes.user_session import UserSession
 
-"""
-TODO:
-При выборе даты сохраняет в БД правильно, но выдает Ooooppps. Ошибка.
-Для /highprice запросило минимальную цену
-
-😖 Ooooppps. Ошибка. 🤭
-
-💰 Введите минимальную цену:
-
-Sergei Krepski, [29 Oct 2022, 15:54:28]:
-0
-
-sb_too_easy_travel, [29 Oct 2022, 15:54:28]:
-Минимальная цена 💰 0.00 RUB.
-
-Минимальная цена 💰 0.00 RUB.
-
-💰 Введите максимальную цену:
-
-💰 Введите максимальную цену:
-
-Максимальная цена 💰 0.00 RUB.
-
-📏 Введите минимальное расстояние от центра города:
-
-Sergei Krepski, [29 Oct 2022, 15:54:56]:
-10
-
-sb_too_easy_travel, [29 Oct 2022, 15:54:57]:
-Минимальное расстояние от центра города 📏 10.0 км.
-
-Максимальная удаленность от центра города 📏 10.0.
-
-📏 Введите максимальную удаленность от центра города:
-
-❌ Количество должно быть числом больше нуля. Поробуйте еще раз.
-
-📝 Введите количество результатов (не больше 5):
-
-📝 Введите количество результатов (не больше 5):
-"""
 
 # initiate logger
 logger = get_logger(__name__)
@@ -163,10 +123,55 @@ def _update_session_byvalue(
     return db.update_session(session, updated_attrs)
 
 
+def _finish_session(session: UserSession) -> None:
+    """Finish active user session."""
+    session = db.update_session(session, {'complete': True})
+    if session is not None:
+        logger.error(f'_finish_session error [{session}]')
+
+
 def _get_results(session: UserSession) -> list[ReplyMessage]:
     """Return list of ReplyMessage instances with results."""
-    # TODO: make next_handeler=False in all ReplyMessages
-    return []
+    chat_id = session.chat_id
+    # check is session's attributes are filled
+    """
+    try:
+         session.__getattribute__(session.attrs.keys()[-1])
+    except AttributeError:
+        return [ReplyMessage(chat_id, d.UNKNOWN_ERROR, next_handler=False)]
+    """
+    api_search_results = api.get_search_results(session)
+    if len(api_search_results) == 0:
+        return [ReplyMessage(chat_id, d.COMPLETE_WRONG, next_handler=False)]
+    replies = [ReplyMessage(chat_id, _get_dialog(
+        'COMPLETE_START', [len(api_search_results)]), next_handler=False)]
+    for result in api_search_results:
+        # save hotel and search reslut to datebase
+        result.add_session(session)
+        db.add_hotel(result.hotel)
+        db.add_search_result(result.search_result)
+        # placeholder
+        placeholder = [
+            result.hotel.name, '⭐' * result.hotel.star_rating,
+            result.hotel.address,
+            result.hotel.distance, 'км',
+            result.search_result.price, API_CURRENCY
+        ]
+        photos = []
+        if session.photos_num > 0:
+            photos = _get_hotel_photos(result.hotel, session.photos_num)
+        markup = InlineKeyboardMarkup(row_width=1)
+        markup.add(InlineKeyboardButton(
+            d.HOTEL_BOOK, url=result.search_result.url))
+        media = None
+        if len(photos) > 0:
+            media = [InputMediaPhoto(
+                x.formated_url(IMAGE_SUFFIX)) for x in photos]
+        replies.append(ReplyMessage(
+            chat_id, _get_dialog('HOTEL_MESSAGE', placeholder),
+            markup=markup, media=media, next_handler=False))
+    _finish_session(session)
+    return replies
 
 
 # skipers

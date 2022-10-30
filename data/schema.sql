@@ -34,7 +34,7 @@ CREATE TABLE "hotels"(
     "id" INTEGER NOT NULL,
     "name" VARCHAR(50) NOT NULL,
     "address" VARCHAR(255) NOT NULL,
-    "starRating" INTEGER DEFAULT 0,
+    "star_rating" INTEGER DEFAULT 0,
     "distance" REAL DEFAULT NULL,
     PRIMARY KEY("id")
 );

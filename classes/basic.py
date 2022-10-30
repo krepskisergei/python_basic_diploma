@@ -38,7 +38,6 @@ class Address:
     locality: str
     region: str
     country_name: str
-    # TODO: add all attributes from API responce
 
     @property
     def data(self) -> str:
@@ -85,7 +84,7 @@ class Hotel:
         ]
 
 
-@dataclass(frozen=False)
+@dataclass(frozen=True)
 class HotelPhoto:
     """
     Dataclass for hotel photos from API and database.
@@ -102,13 +101,9 @@ class HotelPhoto:
             self.url
         ]
 
-    # TODO: change format_url to method output(suffix: str)
-    # use suffix "g" by default
-    # make dataclass frozen=True
-
-    def format_url(self, suffix: str) -> None:
+    def formated_url(self, suffix: str) -> str:
         """Replace {size} to suffix in baseUrl."""
-        self.url = self.url.replace('{size}', suffix)
+        return self.url.replace('{size}', suffix)
 
 
 @dataclass(frozen=True)

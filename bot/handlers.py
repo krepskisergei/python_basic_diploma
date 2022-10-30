@@ -63,21 +63,9 @@ def main_commands(message: Message) -> None:
 
 # Callback handlers
 @bot.callback_query_handler(func=TCal.func(calendar_id=0))
+@bot.callback_query_handler(func=TCal.func(calendar_id=1))
 def calendar_check_in(callback: CallbackQuery) -> None:
     """"""
-    bot.send_chat_action(callback.message.chat.id, 'typing')
-    replies = s.callback_replies(callback.message.chat.id, callback)
-    bot.send_reply_messages(replies)
-    if len(replies) > 0:
-        if replies[-1].next_handler:
-            bot.register_next_step_handler_by_chat_id(
-                callback.message.chat.id, bot_next_handler)
-
-
-@bot.callback_query_handler(func=TCal.func(calendar_id=1))
-def calendar_check_out(callback: CallbackQuery) -> None:
-    """"""
-    bot.send_chat_action(callback.message.chat.id, 'typing')
     replies = s.callback_replies(callback.message.chat.id, callback)
     bot.send_reply_messages(replies)
     if len(replies) > 0:

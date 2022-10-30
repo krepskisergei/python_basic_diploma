@@ -187,10 +187,9 @@ class DB(DBConnector):
         """Return status of adding SearchResult instances list."""
         columns = ('session_id', 'hotel_id', 'url', 'price')
         values = [x for x in search_result.data]
-        values_placer = ', '.join('?' * len(values))
         q = (
             f"INSERT INTO results({', '.join(columns)})"
-            f" VALUES {values_placer}"
+            f" VALUES ({', '.join('?' * len(values))})"
         )
         try:
             self._update(q, values)
