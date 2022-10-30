@@ -183,14 +183,11 @@ class DB(DBConnector):
         logger.debug('get_search_results')
         return []
 
-    def add_search_results(self, search_results: list[SearchResult]) -> bool:
+    def add_search_result(self, search_result: SearchResult) -> bool:
         """Return status of adding SearchResult instances list."""
         columns = ('session_id', 'hotel_id', 'url', 'price')
-        values = [x for y in search_results for x in y.data]
-        values_placer = ', '.join(
-            [f"({', '.join('?' * len(columns))})"
-                for _ in range(len(search_results))]
-        )
+        values = [x for x in search_result.data]
+        values_placer = ', '.join('?' * len(values))
         q = (
             f"INSERT INTO results({', '.join(columns)})"
             f" VALUES {values_placer}"
