@@ -95,6 +95,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.envtest
 
 # Spyder project settings
 .spyderproject
@@ -122,6 +123,7 @@ Library/
 test/
 test.py
 tmp.py
+tmp
 
 # Mac system files
 .DS_Store
@@ -129,6 +131,14 @@ tmp.py
 
 # Database files 
 *.sqlite
+*.db
 
 # Telebot handlers
 .handler-saves/
+
+# tmp
+*.key
+tmp.*
+*.tmp
+temp.*
+*.temp
