@@ -71,10 +71,27 @@ CAL_IDS = {
     'check_in': 0,
     'check_out': 1
 }
+PHOTOS_SHOW_BTNS = {
+    'да': 1,
+    'нет': 0
+}
+
+
+# dialogs
+def _get_dialog(attr_name: str, placeholder: list | tuple = None) -> str:
+    """Return dialog bt attr_name formated by placeholder."""
+    try:
+        dialog: str = d.__getattribute__(attr_name.upper())
+        if placeholder is None:
+            return dialog
+        return dialog.format(*placeholder)
+    except AttributeError as e:
+        logger.debug(f"_get_dialog error [{' '.join(map(str, *e.args))}]")
+        return d.UNKNOWN_ERROR
 
 
 # Api and database unify methods
-def get_locations(location_name: str, limit: int = 0) -> list[Location]:
+def _get_locations(location_name: str, limit: int = 0) -> list[Location]:
     """Return Location instances list by database and Api responces."""
     # search in database
     locations = db.get_locations_byname(location_name, limit)
@@ -87,14 +104,14 @@ def get_locations(location_name: str, limit: int = 0) -> list[Location]:
     # save locations to database
     for location in locations:
         if not db.add_location(location):
-            logger.debug('get_locations error.')
+            logger.debug('_get_locations error.')
     # return locations
-    if 0 < limit > len(locations):
+    if 0 < limit < len(locations):
         return locations[:limit]
     return locations
 
 
-def get_hotel_photos(hotel: Hotel, limit: int = 0) -> list[HotelPhoto]:
+def _get_hotel_photos(hotel: Hotel, limit: int = 0) -> list[HotelPhoto]:
     """Return HotelPhoto instances list by database and Api responces."""
     # search in database
     photos = db.get_hotel_photos(hotel, limit)
@@ -106,7 +123,7 @@ def get_hotel_photos(hotel: Hotel, limit: int = 0) -> list[HotelPhoto]:
         return []
     # save hotel photos to database
     if not db.add_hotel_photos(hotel, photos):
-        logger.debug('get_hotel_photos error.')
+        logger.debug('_get_hotel_photos error.')
     # return photos
     if 0 < limit < len(photos):
         return photos[:limit]
@@ -114,7 +131,7 @@ def get_hotel_photos(hotel: Hotel, limit: int = 0) -> list[HotelPhoto]:
 
 
 # Session methods
-def get_session_bychatid(chat_id: int, message: str = None) -> UserSession:
+def _get_session_bychatid(chat_id: int, command: str = None) -> UserSession:
     """
     Return UserSession by chat_id from database.
     Create new UserSession instance if command is None and is correct.
@@ -123,15 +140,15 @@ def get_session_bychatid(chat_id: int, message: str = None) -> UserSession:
     if session is not None:
         return session
     # no active session in database
-    if message is None:
-        logger.warning(f'get_session_bychatid error: [{chat_id} {message}]')
+    if command is None:
+        logger.warning(f'_get_session_bychatid error: [{chat_id} {command}]')
         return None
-    session_attrs = {'command': message}
+    session_attrs = {'command': command}
     session = UserSession(chat_id, **session_attrs)
     return db.add_session(session)
 
 
-def update_session_byvalue(
+def _update_session_byvalue(
         session: UserSession, value: object) -> UserSession:
     """
     Return updated by value UserSession instance.
@@ -142,25 +159,18 @@ def update_session_byvalue(
     updated_attrs = session.set_attrs(attrs)
     if len(updated_attrs) == 0:
         logger.warning(f"update_session error: {session.chat_id} {str(value)}")
-        raise ValueError()
+        raise ValueError(attrs)
     return db.update_session(session, updated_attrs)
 
 
-# dialogs
-def get_dialog(attr_name: str, placeholder: list | tuple = None) -> str:
-    """Return dialog bt attr_name formated by placeholder."""
-    try:
-        dialog: str = d.__getattribute__(attr_name.upper())
-        if placeholder is None:
-            return dialog
-        return dialog.format(*placeholder)
-    except AttributeError as e:
-        logger.debug(f"get_dialog error [{' '.join(map(str, *e.args))}]")
-        return d.UNKNOWN_ERROR
+def _get_results(session: UserSession) -> list[ReplyMessage]:
+    """Return list of ReplyMessage instances with results."""
+    # TODO: make next_handeler=False in all ReplyMessages
+    return []
 
 
-# generators
-def skip_attrs(session: UserSession) -> None:
+# skipers
+def _skip_attrs(session: UserSession) -> None:
     """Fill some attributes by 0 by command."""
     skip_commands = ('/lowprice', '/highprice')
     skip_steps = {
@@ -170,213 +180,204 @@ def skip_attrs(session: UserSession) -> None:
         'distance_max': 0.0,
     }
     if session.command in skip_commands:
-        updated_attrs = session.set_attrs(skip_steps)
-        if len(skip_steps) == len(updated_attrs):
-            db.update_session(session, updated_attrs)
+        chat_id = session.chat_id
+        session = _get_session_bychatid(chat_id)
+        if session.current_step in skip_steps.keys():
+            for _, value in skip_steps.items():
+                try:
+                    session = _update_session_byvalue(session, value)
+                except ValueError as e:
+                    logger.warning((
+                        '_skip_attrs error '
+                        f"[{' '.join(map(str, *e.args))}]"
+                    ))
 
 
-def generate_calendar(session: UserSession) -> list[ReplyMessage]:
-    """Return list of ReplyMessage instances with calendar."""
+# starts
+def _gen_calendar(session: UserSession) -> TCal:
+    """Return TCal instance for session's current step."""
     current_step = session.current_step
-    if current_step not in CAL_IDS.keys():
-        return []
+    cal_id = CAL_IDS.get(current_step, None)
+    if cal_id is None:
+        logger.warning(f'_gen_calendar error: invalid step {current_step}.')
+        return None
     min_date = date.today()
-    if CAL_IDS[current_step] > 0:
+    if cal_id > 0:
         min_date = session.check_in + timedelta(days=1)
-    calendar, step = TCal(
-        calendar_id=CAL_IDS[current_step],
-        current_date=min_date,
-        min_date=min_date,
-        locale=API_LOCALE.split('_')[0]
-    ).build()
-    return [ReplyMessage(
-        session.chat_id, get_dialog(f'{current_step}_START'), markup=calendar)]
+    return TCal(
+        calendar_id=cal_id,
+        current_date=min_date, min_date=min_date,
+        locale=API_LOCALE.split('_')[0])
 
 
-def generate_results(session: UserSession) -> list[ReplyMessage]:
-    """Return list of ReplyMessage instances by search result"""
-    return [ReplyMessage(session.chat_id, 'Результаты', next_handler=False)]
-
-
-def generate_start(session: UserSession) -> list[ReplyMessage]:
-    """Return list of ReplyMessage instances for start reply."""
-    attr_name = session.current_step
-    match attr_name:
-        case 'check_in':
-            return generate_calendar(session)
-        case 'check_out':
-            return generate_calendar(session)
-        case 'complete':
-            return generate_results(session)
+def _starts(session: UserSession) -> list[ReplyMessage]:
+    """Return list of ReplyMessage instances by session."""
+    chat_id = session.chat_id
+    current_step = session.current_step
+    text = _get_dialog(f'{current_step}_START')
+    match current_step:
+        case 'check_in' | 'check_out':
+            markup, step = _gen_calendar(session).build()
+            return [ReplyMessage(
+                chat_id, text, markup=markup, next_handler=False)]
         case 'results_num':
-            return [ReplyMessage(session.chat_id, get_dialog(
-                f'{attr_name}_START', [MAX_RESULTS]))]
+            return [ReplyMessage(chat_id, _get_dialog(
+                'RESULTS_NUM_START', [MAX_RESULTS]))]
+        case 'photos_show':
+            markup = ReplyKeyboardMarkup(one_time_keyboard=True, row_width=1)
+            for btn in PHOTOS_SHOW_BTNS.keys():
+                markup.add(btn)
+            return [ReplyMessage(chat_id, text, markup=markup)]
         case 'photos_num':
-            return [ReplyMessage(session.chat_id, get_dialog(
-                f'{attr_name}_START', [MAX_PHOTOS]))]
+            return [ReplyMessage(chat_id, _get_dialog(
+                'PHOTOS_NUM_START', [MAX_PHOTOS]))]
+        case 'complete':
+            return _get_results(session)
         case _:
-            return [
-                ReplyMessage(session.chat_id, get_dialog(f'{attr_name}_START'))
-            ]
+            return [ReplyMessage(chat_id, text)]
 
 
-# additional processors
-def process_location_id(
-        session: UserSession, message: str) -> ReplyMessage:
-    """Return ReplyMessage instances by proceccing location_id."""
-    attr_name = 'location_id'
-    locations = get_locations(message, BTN_MAX)
+# processors
+def _process_main(session: UserSession, value: object) -> list[ReplyMessage]:
+    """Return list of ReplyMessage instances for photos_show."""
+    chat_id = session.chat_id
+    attr_name = session.current_step
+    try:
+        _update_session_byvalue(session, value)
+        return []
+    except ValueError as e:
+        logger.error((
+            '_process_main error '
+            f"[{' '.join(map(str, *e.args))}]"))
+        return [ReplyMessage(chat_id, _get_dialog(
+            f'{attr_name}_WRONG'), next_handler=False)]
+
+
+def _process_location_id(
+        session: UserSession, message: str) -> list[ReplyMessage]:
+    """Return list of ReplyMessage instances for location_id."""
+    locations = _get_locations(message, BTN_MAX)
     # check :64 symbols equals
     for location in locations:
         if location.caption[:64] == message:
             locations = [location]
             break
-    # check results
+    chat_id = session.chat_id
+    attr_name = 'location_id'
     match len(locations):
         case 0:
             # no results
-            return ReplyMessage(
-                session.chat_id,
-                text=get_dialog(f'{attr_name}_WRONG'),
-                next_handler=False
-            )
+            return [ReplyMessage(chat_id, _get_dialog(
+                f'{attr_name}_WRONG'), next_handler=False)]
         case 1:
             # one result
-            try:
-                value = locations[0].destination_id
-                session = update_session_byvalue(session, value)
-                return ReplyMessage(
-                    session.chat_id,
-                    text=get_dialog(
-                        f'{attr_name}_COMPLETE', [locations[0].caption]),
-                    next_handler=False
-                    )
-            except ValueError:
-                return ReplyMessage(
-                    session.chat_id, text=d.UNKNOWN_ERROR, next_handler=False)
+            location = locations[0]
+            return _process_main(session, location.destination_id)
         case _:
-            # many results
-            markup = ReplyKeyboardMarkup(one_time_keyboard=True)
-            for location in locations[:BTN_MAX]:
+            # more that one result
+            markup = ReplyKeyboardMarkup(
+                one_time_keyboard=True, row_width=min(BTN_MAX, len(locations)))
+            for location in locations:
                 markup.add(location.caption[:64])
-            return ReplyMessage(
-                session.chat_id,
-                d.LOCATION_ID_CLARIFY,
-                markup=markup,
-                clarify=True
-            )
+            return [ReplyMessage(
+                chat_id, d.LOCATION_ID_CLARIFY, markup=markup, clarify=True)]
 
 
-def process_date_or_float(session: UserSession, message: str) -> ReplyMessage:
-    """Return ReplyMessage instances by proceccing dates."""
-    attr_name: str = session.current_step
-    try:
-        session = update_session_byvalue(session, message)
-        placeholder = [session.__getattribute__(attr_name)]
-        for name, value in UNITS.items():
-            if attr_name.find(name) >= 0:
-                placeholder.append(value)
-        return ReplyMessage(
-            session.chat_id,
-            text=get_dialog(f'{attr_name}_COMPLETE', placeholder),
-            next_handler=False)
-    except ValueError:
-        return ReplyMessage(
-            session.chat_id,
-            text=get_dialog(f'{attr_name}_WRONG'),
-            next_handler=False
-        )
-
-
-# main processors
-def process_command(chat_id: int, command: str) -> list[ReplyMessage]:
-    """Return list of ReplyMessage instances by command from chat_id."""
-    session = get_session_bychatid(chat_id, command)
-    # wrong command in message
-    if session is None:
-        return [ReplyMessage(chat_id, d.ERROR_CONTENT)]
-    replies = [ReplyMessage(
-        chat_id, get_dialog(f"COMMAND_{command.replace('/', '')}"))]
-    if replies[-1].clarify:
-        return replies
-    replies += generate_start(session)
-    return replies
-
-
-def process_message(chat_id: int, message: str) -> list[ReplyMessage]:
-    """Return list of ReplyMessage instances by message from chat_id."""
-    session = get_session_bychatid(chat_id, message)
-    # no active session
-    if session is None:
-        return [ReplyMessage(chat_id, d.ERROR_CONTENT, next_handler=False)]
-    replies = []
-    match session.current_step:
-        case 'location_id':
-            replies.append(process_location_id(session, message))
-        case _:
-            # check_in, check_out
-            # price_min, price_max
-            # distance_min, distance_max
-            replies.append(process_date_or_float(session, message))
-            # skip attrs
-            skip_attrs(session)
-    # update session
-    session = get_session_bychatid(chat_id)
-    if replies[-1].clarify:
-        return replies
-    replies += generate_start(session)
-    return replies
-
-
-def process_callback(callback: CallbackQuery) -> list[ReplyMessage]:
-    """Return list of ReplyMessage instances by callback."""
-    chat_id = callback.message.chat.id
-    message = callback.message.text
-    session = get_session_bychatid(chat_id, message)
-    # no active session
-    if session is None:
-        return [ReplyMessage(chat_id, d.ERROR_CONTENT, next_handler=False)]
-    attr_name = session.current_step
-    if attr_name not in CAL_IDS.keys():
-        return [ReplyMessage(chat_id, d.ERROR_CONTENT, next_handler=False)]
-    replies = []
-    min_date = date.today()
-    if CAL_IDS[attr_name] > 0:
-        min_date = session.check_in + timedelta(days=1)
-    result, key, step = TCal(
-        calendar_id=CAL_IDS[attr_name],
-        current_date=min_date,
-        min_date=min_date,
-        locale=API_LOCALE.split('_')[0]
-    ).process(callback.data)
-    if not result and key:
-        return [ReplyMessage(
-            chat_id,
-            get_dialog(f'{attr_name}_START'),
-            markup=key,
-            next_handler=False,
-            edit_message_id=callback.message.message_id)]
-    if result:
-        try:
-            session = update_session_byvalue(session, result)
+def _process_photos_show(
+        session: UserSession, message: str) -> list[ReplyMessage]:
+    """Return list of ReplyMessage instances for photos_show."""
+    chat_id = session.chat_id
+    value = PHOTOS_SHOW_BTNS.get(message, None)
+    match value:
+        case None:
+            return [ReplyMessage(
+                chat_id, d.PHOTOS_SHOW_WRONG, next_handler=False)]
+        case 0:
             try:
-                value: date = session.__getattribute__(attr_name)
-                value = value.strftime('%d.%m.%Y')
+                session = _update_session_byvalue(session, value)
+                # update photos_num to 0
+                return _process_main(session, 0)
             except ValueError as e:
-                logger.debug(
-                    f"process_callback error [{' '.join(map(str, *e.args))}]")
-                value = ''
-            placeholder = [value]
-            replies.append(ReplyMessage(
-                chat_id, get_dialog(attr_name, placeholder),
-                next_handler=False))
-        except ValueError:
-            replies.append(ReplyMessage(
-                chat_id, get_dialog(f'{attr_name}_WRONG'),
-                next_handler=False))
-    # update session
-    session = get_session_bychatid(chat_id)
-    if replies[-1].clarify:
-        return replies
-    replies += generate_start(session)
+                logger.error((
+                    '_process_photos_show error '
+                    f"[{' '.join(map(str, *e.args))}]"))
+                return [ReplyMessage(
+                    chat_id, d.PHOTOS_SHOW_WRONG, next_handler=False)]
+        case _:
+            try:
+                session = _update_session_byvalue(session, value)
+            except ValueError as e:
+                logger.error((
+                    '_process_photos_show error '
+                    f"[{' '.join(map(str, *e.args))}]"))
+                return [ReplyMessage(
+                    chat_id, d.PHOTOS_SHOW_WRONG, next_handler=False)]
+
+
+def _process_user_message(
+        session: UserSession, value: object) -> list[ReplyMessage]:
+    """Return list of ReplyMessage instances by processing data from user."""
+    attr_name = session.current_step
+    match attr_name:
+        case 'location_id':
+            reply_messages = _process_location_id(session, value)
+        case 'photos_show':
+            reply_messages = _process_photos_show(session, value)
+        case _:
+            reply_messages = _process_main(session, value)
+    session = _get_session_bychatid(session.chat_id)
+    _skip_attrs(session)
+    return reply_messages
+
+
+# main functions
+def command_replies(chat_id: int, command: str) -> list[ReplyMessage]:
+    """Return list of ReplyMessages by command."""
+    session = _get_session_bychatid(chat_id, command)
+    if session is None:
+        return [ReplyMessage(chat_id, d.ERROR_CONTENT, next_handler=False)]
+    command = command.replace('/', '')
+    replies = [ReplyMessage(chat_id, _get_dialog(
+        f'COMMAND_{command}'), next_handler=False)]
+    replies += _starts(session)
+    return replies
+
+
+def message_replies(chat_id: int, message: str) -> list[ReplyMessage]:
+    """Return list of ReplyMessages by message."""
+    session = _get_session_bychatid(chat_id)
+    if session is None:
+        return [ReplyMessage(chat_id, d.ERROR_CONTENT, next_handler=False)]
+    replies = _process_user_message(session, message)
+    if len(replies) > 0:
+        if replies[-1].clarify:
+            return replies
+    replies += _starts(session)
+    return replies
+
+
+def callback_replies(
+        chat_id: int, callback: CallbackQuery) -> list[ReplyMessage]:
+    """Return list of ReplyMessages by callback."""
+    session = _get_session_bychatid(chat_id)
+    if session is None:
+        return [ReplyMessage(chat_id, d.ERROR_CONTENT, next_handler=False)]
+    value, markup, step = _gen_calendar(session).process(callback.data)
+    attr_name = session.current_step
+    if not value and markup:
+        # edit message
+        return [ReplyMessage(
+            chat_id, _get_dialog(f'{attr_name}_START'),
+            markup=markup, next_handler=False,
+            edit_message_id=callback.message.id, clarify=True)]
+    elif value:
+        replies = _process_user_message(session, value)
+    else:
+        logger.error(f'callback_replies error {callback}')
+        replies = [ReplyMessage(chat_id, d.UNKNOWN_ERROR)]
+    if len(replies) > 0:
+        if replies[-1].clarify:
+            return replies
+    session = _get_session_bychatid(chat_id)
+    replies += _starts(session)
     return replies

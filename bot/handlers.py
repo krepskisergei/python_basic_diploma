@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 # initiate bot
 bot = TBot(token=TOKEN, parse_mode='Markdown')
 bot.remove_webhook()
-bot.enable_save_next_step_handlers(delay=2)
+bot.enable_save_next_step_handlers(delay=120)
 bot.load_next_step_handlers()
 
 
@@ -53,11 +53,12 @@ def help(message: Message) -> None:
 def main_commands(message: Message) -> None:
     """Process main commands."""
     bot.send_chat_action(message.chat.id, 'typing')
-    replies = s.process_command(message.chat.id, message.text)
+    replies = s.command_replies(message.chat.id, message.text)
     bot.send_reply_messages(replies)
-    if replies[-1].next_handler:
-        bot.register_next_step_handler_by_chat_id(
-            message.chat.id, bot_next_handler)
+    if len(replies) > 0:
+        if replies[-1].next_handler:
+            bot.register_next_step_handler_by_chat_id(
+                message.chat.id, bot_next_handler)
 
 
 # Callback handlers
@@ -65,22 +66,24 @@ def main_commands(message: Message) -> None:
 def calendar_check_in(callback: CallbackQuery) -> None:
     """"""
     bot.send_chat_action(callback.message.chat.id, 'typing')
-    replies = s.process_callback(callback)
+    replies = s.callback_replies(callback.message.chat.id, callback)
     bot.send_reply_messages(replies)
-    if replies[-1].next_handler:
-        bot.register_next_step_handler_by_chat_id(
-            callback.message.chat.id, bot_next_handler)
+    if len(replies) > 0:
+        if replies[-1].next_handler:
+            bot.register_next_step_handler_by_chat_id(
+                callback.message.chat.id, bot_next_handler)
 
 
 @bot.callback_query_handler(func=TCal.func(calendar_id=1))
 def calendar_check_out(callback: CallbackQuery) -> None:
     """"""
     bot.send_chat_action(callback.message.chat.id, 'typing')
-    replies = s.process_callback(callback)
+    replies = s.callback_replies(callback.message.chat.id, callback)
     bot.send_reply_messages(replies)
-    if replies[-1].next_handler:
-        bot.register_next_step_handler_by_chat_id(
-            callback.message.chat.id, bot_next_handler)
+    if len(replies) > 0:
+        if replies[-1].next_handler:
+            bot.register_next_step_handler_by_chat_id(
+                callback.message.chat.id, bot_next_handler)
 
 
 # Next handlers and text messages handlers
@@ -88,8 +91,9 @@ def calendar_check_out(callback: CallbackQuery) -> None:
 def bot_next_handler(message: Message) -> None:
     """Next handler for all proceccing commands."""
     bot.send_chat_action(message.chat.id, 'typing')
-    replies = s.process_message(message.chat.id, message.text)
+    replies = s.message_replies(message.chat.id, message.text)
     bot.send_reply_messages(replies)
-    if replies[-1].next_handler:
-        bot.register_next_step_handler_by_chat_id(
-            message.chat.id, bot_next_handler)
+    if len(replies) > 0:
+        if replies[-1].next_handler:
+            bot.register_next_step_handler_by_chat_id(
+                message.chat.id, bot_next_handler)
