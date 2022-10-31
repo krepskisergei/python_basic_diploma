@@ -108,6 +108,19 @@ class UserSession:
                 )
 
     # setters
+    def set_attrs(self, attr_dict: dict) -> dict:
+        """
+        Return dict with setted attributes.
+        """
+        success_attrs = {}
+        for attr, value in attr_dict.items():
+            try:
+                if self._set_attr(attr, value):
+                    success_attrs[attr] = value
+            except _UserSessionBaseError:
+                pass
+        return success_attrs
+
     def _set_attr(self, attr_name: str, attr_value: object) -> bool:
         """
         Return attribute setter status.
