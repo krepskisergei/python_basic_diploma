@@ -61,6 +61,14 @@ def main_commands(message: Message) -> None:
                 message.chat.id, bot_next_handler)
 
 
+@bot.message_handler(commands=['history'])
+def history_command(message: Message) -> None:
+    """Process history command."""
+    bot.send_chat_action(message.chat.id, 'typing')
+    replies = s.get_user_history(message.chat.id)
+    bot.send_reply_messages(replies)
+
+
 # Callback handlers
 @bot.callback_query_handler(func=TCal.func(calendar_id=0))
 @bot.callback_query_handler(func=TCal.func(calendar_id=1))

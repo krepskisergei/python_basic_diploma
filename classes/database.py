@@ -238,7 +238,7 @@ class DB(DBConnector):
         q = (
             f"SELECT {', '.join(columns)} FROM sessions"
             " WHERE chat_id = ? AND complete IS TRUE"
-            " ORDER BY queryTime DECS"
+            " ORDER BY query_time DESC"
         )
         if limit > 0:
             q += f" LIMIT {limit}"

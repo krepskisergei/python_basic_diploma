@@ -6,12 +6,13 @@ from telegram_bot_calendar import WMonthTelegramCalendar as TCal
 
 from app.app_logger import get_logger
 from app.config import (
-    API_LOCALE, DB_ENGINE, API_CURRENCY, MAX_RESULTS, MAX_PHOTOS, IMAGE_SUFFIX)
-# MAX_HISTORY
+    API_LOCALE, API_CURRENCY, DB_ENGINE, MAX_HISTORY, MAX_RESULTS,
+    MAX_PHOTOS, IMAGE_SUFFIX)
+
 import bot.dialog as d
 from classes.basic import Hotel, HotelPhoto, Location
 from classes.database import DB
-from classes.hotels_api import HotelsApi
+from classes.hotels_api import ApiSearchResult, HotelsApi
 from classes.tbot import ReplyMessage
 from classes.user_session import UserSession
 
@@ -48,6 +49,30 @@ def _get_dialog(attr_name: str, placeholder: list | tuple = None) -> str:
     except AttributeError as e:
         logger.debug(f"_get_dialog error [{' '.join(map(str, *e.args))}]")
         return d.UNKNOWN_ERROR
+
+
+def _display_api_search_result(
+        session: UserSession, result: ApiSearchResult) -> ReplyMessage:
+    """Return ReplyMessage by ApiSearchResult instance."""
+    placeholder = [
+        result.hotel.name, '⭐' * result.hotel.star_rating,
+        result.hotel.address,
+        result.hotel.distance, 'км',
+        result.search_result.price, API_CURRENCY
+    ]
+    photos = []
+    if session.photos_num > 0:
+        photos = _get_hotel_photos(result.hotel, session.photos_num)
+    markup = InlineKeyboardMarkup(row_width=1)
+    markup.add(InlineKeyboardButton(
+        d.HOTEL_BOOK, url=result.search_result.url))
+    media = None
+    if len(photos) > 0:
+        media = [InputMediaPhoto(
+            x.formated_url(IMAGE_SUFFIX)) for x in photos]
+    return ReplyMessage(
+        session.chat_id, _get_dialog('HOTEL_MESSAGE', placeholder),
+        markup=markup, media=media, next_handler=False)
 
 
 # Api and database unify methods
@@ -152,25 +177,7 @@ def _get_results(session: UserSession) -> list[ReplyMessage]:
         db.add_hotel(result.hotel)
         db.add_search_result(result.search_result)
         # placeholder
-        placeholder = [
-            result.hotel.name, '⭐' * result.hotel.star_rating,
-            result.hotel.address,
-            result.hotel.distance, 'км',
-            result.search_result.price, API_CURRENCY
-        ]
-        photos = []
-        if session.photos_num > 0:
-            photos = _get_hotel_photos(result.hotel, session.photos_num)
-        markup = InlineKeyboardMarkup(row_width=1)
-        markup.add(InlineKeyboardButton(
-            d.HOTEL_BOOK, url=result.search_result.url))
-        media = None
-        if len(photos) > 0:
-            media = [InputMediaPhoto(
-                x.formated_url(IMAGE_SUFFIX)) for x in photos]
-        replies.append(ReplyMessage(
-            chat_id, _get_dialog('HOTEL_MESSAGE', placeholder),
-            markup=markup, media=media, next_handler=False))
+        replies.append(_display_api_search_result(session, result))
     _finish_session(session)
     return replies
 
@@ -387,4 +394,39 @@ def callback_replies(
             return replies
     session = _get_session_bychatid(chat_id)
     replies += _starts(session)
+    return replies
+
+
+def get_user_history(chat_id: int) -> list[ReplyMessage]:
+    """
+    Return list of ReplyMessage instances with completed UserSession results.
+    """
+    replies = []
+    for session in db.get_sessions(chat_id, MAX_HISTORY):
+        min_placeholder = ''
+        float_attrs = [
+            session.price_min, session.price_max,
+            session.distance_min, session.distance_max]
+        if sum(float_attrs) > 0:
+            min_placeholder = _get_dialog('USER_SESSION_FLOATS', float_attrs)
+        placeholder = [
+            session.query_time.strftime('%d.%m.%Y %H:%M:%S'),
+            session.command.replace('/', ''),
+            db.get_location_byid(session.location_id).caption,
+            session.check_in.strftime('%d.%m.%Y'),
+            session.check_out.strftime('%d.%m.%Y'),
+            min_placeholder,
+            session.results_num,
+            session.photos_num
+        ]
+        replies.append(ReplyMessage(chat_id, _get_dialog(
+            'USER_SESSION', placeholder), next_handler=False))
+        for result in db.get_search_results(session):
+            hotel = db.get_hotel_byid(result.hotel_id)
+            api_search_result = ApiSearchResult(
+                hotel.id, hotel.name, hotel.address, hotel.star_rating,
+                hotel.distance, result.price)
+            api_search_result.add_session(session)
+            replies.append(_display_api_search_result(
+                session, api_search_result))
     return replies
