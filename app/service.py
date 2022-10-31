@@ -404,11 +404,12 @@ def get_user_history(chat_id: int) -> list[ReplyMessage]:
     replies = []
     for session in db.get_sessions(chat_id, MAX_HISTORY):
         min_placeholder = ''
-        float_attrs = [
-            session.price_min, session.price_max,
-            session.distance_min, session.distance_max]
-        if sum(float_attrs) > 0:
-            min_placeholder = _get_dialog('USER_SESSION_FLOATS', float_attrs)
+        price_attrs = [session.price_min, session.price_max]
+        distance_attrs = [session.distance_min, session.distance_max]
+        if sum(price_attrs) + sum(distance_attrs) > 0:
+            min_placeholder = _get_dialog(
+                'USER_SESSION_FLOATS',
+                price_attrs + [API_CURRENCY] + distance_attrs + ['км'])
         placeholder = [
             session.query_time.strftime('%d.%m.%Y %H:%M:%S'),
             session.command.replace('/', ''),
