@@ -20,6 +20,7 @@ class UserSession:
         'distance_min': float,
         'distance_max': float,
         'results_num': int,
+        'photos_show': bool,
         'photos_num': int
     }
     id: int
@@ -33,6 +34,7 @@ class UserSession:
     distance_min: float
     distance_max: float
     results_num: int
+    photos_show: bool
     photos_num: int
 
     def __init__(self, chat_id: int, **kwargs) -> None:

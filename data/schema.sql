@@ -13,6 +13,7 @@ CREATE TABLE "sessions"(
     "distance_min" REAL DEFAULT NULL,
     "distance_max" REAL DEFAULT NULL,
     "results_num" INTEGER DEFAULT NULL,
+    "photos_show" BOOLEAN DEFAULT NULL,
     "photos_num" INTEGER DEFAULT NULL,
     "complete" BOOLEAN DEFAULT FALSE,
     PRIMARY KEY("id"),

@@ -203,9 +203,13 @@ class DB(DBConnector):
     def get_active_session(self, chat_id: int) -> UserSession:
         """Return active UserSession instance by chat_id."""
         columns = (
-            'command', 'id', 'query_time', 'location_id',
-            'check_in', 'check_out', 'price_min', 'price_max',
-            'distance_min', 'distance_max', 'results_num', 'photos_num'
+            'command', 'id', 'query_time',
+            'location_id',
+            'check_in', 'check_out',
+            'price_min', 'price_max',
+            'distance_min', 'distance_max',
+            'results_num',
+            'photos_show', 'photos_num'
         )
         q = (
             f"SELECT {', '.join(columns)} FROM sessions"
@@ -223,9 +227,13 @@ class DB(DBConnector):
     def get_sessions(self, chat_id: int, limit: int = 0) -> list[UserSession]:
         """Return list of complete UserSession instances list by chat_id."""
         columns = (
-            'command', 'id', 'query_time', 'location_id',
-            'check_in', 'check_out', 'price_min', 'price_max',
-            'distance_min', 'distance_max', 'results_num', 'photos_num'
+            'command', 'id', 'query_time',
+            'location_id',
+            'check_in', 'check_out',
+            'price_min', 'price_max',
+            'distance_min', 'distance_max',
+            'results_num',
+            'photos_show', 'photos_num'
         )
         q = (
             f"SELECT {', '.join(columns)} FROM sessions"

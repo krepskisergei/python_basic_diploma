@@ -219,6 +219,7 @@ def _gen_calendar(session: UserSession) -> TCal:
 def _starts(session: UserSession) -> list[ReplyMessage]:
     """Return list of ReplyMessage instances by session."""
     chat_id = session.chat_id
+    session = _get_session_bychatid(chat_id)
     current_step = session.current_step
     text = _get_dialog(f'{current_step}_START')
     match current_step:
@@ -232,7 +233,7 @@ def _starts(session: UserSession) -> list[ReplyMessage]:
         case 'photos_show':
             markup = ReplyKeyboardMarkup(one_time_keyboard=True, row_width=1)
             for btn in PHOTOS_SHOW_BTNS.keys():
-                markup.add(btn)
+                markup.add(btn.title())
             return [ReplyMessage(chat_id, text, markup=markup)]
         case 'photos_num':
             return [ReplyMessage(chat_id, _get_dialog(
@@ -293,14 +294,14 @@ def _process_photos_show(
         session: UserSession, message: str) -> list[ReplyMessage]:
     """Return list of ReplyMessage instances for photos_show."""
     chat_id = session.chat_id
-    value = PHOTOS_SHOW_BTNS.get(message, None)
+    value = PHOTOS_SHOW_BTNS.get(message.lower(), None)
     match value:
         case None:
             return [ReplyMessage(
                 chat_id, d.PHOTOS_SHOW_WRONG, next_handler=False)]
         case 0:
             try:
-                session = _update_session_byvalue(session, value)
+                session = _update_session_byvalue(session, bool(value))
                 # update photos_num to 0
                 return _process_main(session, 0)
             except ValueError as e:
@@ -311,7 +312,7 @@ def _process_photos_show(
                     chat_id, d.PHOTOS_SHOW_WRONG, next_handler=False)]
         case _:
             try:
-                session = _update_session_byvalue(session, value)
+                return _process_main(session, bool(value))
             except ValueError as e:
                 logger.error((
                     '_process_photos_show error '
