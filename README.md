@@ -94,7 +94,9 @@ Docker version 20.10.21, build baeda1f
     # docker volume create $(pwd)/database/python_basic_diploma
     ```
 ```
-docker build 
+$ cd ~/projects/sources/python_basic_diploma
+
+# docker build -t krepski/python_basic_diploma:0.1 .
 ```
 
 ```

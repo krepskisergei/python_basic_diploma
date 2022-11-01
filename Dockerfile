@@ -20,6 +20,5 @@ RUN chown -hR docker-user:docker-user /app
 USER docker-user
 VOLUME logs db
 COPY . .
-ENV
 # run
 CMD ["python3", "main.py"]
