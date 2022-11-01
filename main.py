@@ -1,15 +1,34 @@
-import os
+from os import getcwd, path
 from dotenv import load_dotenv
 
 
+def load_env(fn: str = '.env', override: bool = False) -> bool:
+    """Return environment load status from fn file."""
+    # comment underline string for run without Docker
+    return True
+    # running without Docker code
+    fn_path = path.join(getcwd(), fn)
+    if not path.exists(fn_path):
+        raise EnvironmentError(f'Environment file [{fn_path}] not exists.')
+    return load_dotenv(fn_path, verbose=True, override=override)
+
+
+def clear_debug_log() -> None:
+    fn = path.join(getcwd(), 'app_debug.log')
+    if path.exists(fn):
+        with open(fn, 'w'):
+            pass
+
+
 if __name__ == '__main__':
-    # load secrect from .env file to env
-    dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
-    if not os.path.exists(dotenv_path):
-        raise EnvironmentError
-    else:
-        load_dotenv(dotenv_path)
-        
-        # run Bot
-        from handlers import bot
+    if load_env(fn='.env', override=True):
+        clear_debug_log()
+
+        from app.app_logger import get_logger
+        from bot.handlers import bot
+
+        # initiate logger
+        logger = get_logger(__name__)
+
+        logger.info('Application starts...')
         bot.polling(non_stop=True, interval=0)

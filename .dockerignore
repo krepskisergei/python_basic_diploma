@@ -1,0 +1,14 @@
+# Text files and configs
+*.md
+*.log
+.flake8
+# Environment files
+.env.example
+.env
+# Git files
+.git
+.gitignore
+.gitkeep
+# Docker files
+Dockerfile
+.dockerignore
