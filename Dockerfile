@@ -18,7 +18,7 @@ RUN pip install --upgrade pip && \
 RUN addgroup -g 5000 docker-user && \
     adduser --uid 5001 \
     --ingroup docker-user \
-    --home /home/docker-user \
+    --no-create-home \
     --shell /bin/bash \
     --disabled-password \
     docker-user
