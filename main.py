@@ -4,6 +4,9 @@ from dotenv import load_dotenv
 
 def load_env(fn: str = '.env', override: bool = False) -> bool:
     """Return environment load status from fn file."""
+    # comment underline string for run without Docker
+    return True
+    # running without Docker code
     fn_path = path.join(getcwd(), fn)
     if not path.exists(fn_path):
         raise EnvironmentError(f'Environment file [{fn_path}] not exists.')
@@ -19,7 +22,6 @@ def clear_debug_log() -> None:
 
 if __name__ == '__main__':
     if load_env(fn='.env', override=True):
-        # TODO: remove debug log cleaner
         clear_debug_log()
 
         from app.app_logger import get_logger

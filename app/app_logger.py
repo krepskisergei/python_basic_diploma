@@ -8,9 +8,9 @@ class _AppLogger(logging.Logger):
     """
     _LOG_FORMAT = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
     # log filenames
-    _ERROR_LOG_FN = 'error.log'
-    _APP_LOG_FN = 'app.log'
-    _DEBUG_LOG_FN = 'app_debug.log'
+    _ERROR_LOG_FN = 'logs/error.log'
+    _APP_LOG_FN = 'logs/app.log'
+    _DEBUG_LOG_FN = 'logs/app_debug.log'
     # Class variables for Exceptions
     DEBUG = logging.DEBUG
     INFO = logging.INFO
