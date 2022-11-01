@@ -1,4 +1,4 @@
-# Text files
+# Text files and configs
 *.md
 *.log
 .flake8
@@ -12,6 +12,3 @@
 # Docker files
 Dockerfile
 .dockerignore
-# Volumes
-# db
-# logs
