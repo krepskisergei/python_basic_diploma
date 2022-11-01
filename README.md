@@ -9,21 +9,22 @@
 ## Installing
 
 1. Copy source code:
-    ```
-    $ mkdir ~/projects ~/projects/sources
+```
+$ mkdir ~/projects ~/projects/sources
 
-    $ cd ~/projects/sources
+$ cd ~/projects/sources
 
-    $ git clone https://gitlab.skillbox.ru/sergei_krepskii/python_basic_diploma.git
+$ git clone https://gitlab.skillbox.ru/sergei_krepskii/python_basic_diploma.git
 
-    $ cd python_basic_diploma
-    ```
+$ cd python_basic_diploma
+```
 1. Create and fill environment file:
-    ```
-    $ cp .env.example .env
+```
+$ cp .env.example .env
 
-    $ vi .env
-    ```
+$ vi .env
+```
+> note that there should be no quotes (" or ') in .env file
 1. Run project by Python or Docker.
 
 ### Python running
@@ -72,34 +73,40 @@ Docker version 20.10.21, build baeda1f
 #### Instructions
 
 1. Create user group with gid 5000 
-    ```
-    # groupadd -g 5000 group_name
-    ```
+```
+# groupadd -g 5000 group_name
+```
 1. Add yourself login to group
-    ```
-    # usermod -a -G group_name your_login
-    ```
+```
+# usermod -a -G group_name your_login
+```
 1. Create directories for logs and database
-    ```
-    $ mkdir ~/projects/logs ~/projects/database
+```
+$ mkdir ~/projects/logs ~/projects/database
 
-    # chown -R your_login:group_name ~/projects/logs ~/projects/database
-    ```
-1. Create Docker volumes
-    ```
-    $ cd ~/projects
+$ mkdir ~/projects/logs/python_basic_diploma ~/projects/database/python_basic_diploma 
 
-    # docker volume create $(pwd)/logs/python_basic_diploma
+# chown -R your_login:group_name ~/projects/logs ~/projects/database
 
-    # docker volume create $(pwd)/database/python_basic_diploma
-    ```
+# chmod -R 774 ~/projects/logs 
+# chmod -R 770 ~/projects/database
+```
+1. Build Docker container:
 ```
 $ cd ~/projects/sources/python_basic_diploma
 
 # docker build -t krepski/python_basic_diploma:0.1 .
 ```
-
+1. Run docker container in background
 ```
 $ cd ~/projects
-# docker run -d --name python_basic_diploma --env-file $(pwd)/sources/python_basic_diploma/.env -v 
+# docker run -d \
+--name python_basic_diploma \
+--env-file $(pwd)/sources/python_basic_diploma/.env \
+-v $(pwd)/logs/python_basic_diploma:/app/logs \
+-v $(pwd)/database/python_basic_diploma:/app/db \
+krepski/python_basic_diploma:0.1
 ```
+
+> add `--restart=allways` attribute to have restartable container 
+

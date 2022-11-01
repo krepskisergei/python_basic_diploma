@@ -1,8 +1,17 @@
+# Text files
 *.md
 *.log
 .flake8
+# Environment files
 .env.example
 .env
-# volumes
-db
-logs
+# Git files
+.git
+.gitignore
+.gitkeep
+# Docker files
+Dockerfile
+.dockerignore
+# Volumes
+# db
+# logs
