@@ -15,7 +15,7 @@ def load_variable(name: str, default_value: str = None) -> str:
     raise EnvironmentError(f'Environment variable [{name}] value error.')
 
 
-APP_DEBUG = True
+APP_DEBUG = False
 # Database
 DB_ENGINE = load_variable('DATABASE_ENGINE')
 # Telegram

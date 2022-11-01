@@ -1,0 +1,8 @@
+*.md
+*.log
+.flake8
+.env.example
+.env
+# volumes
+db
+logs
