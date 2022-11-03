@@ -193,4 +193,4 @@ $ cd ~/projects
 krepski/python_basic_diploma:0.1
 ```
 
-> add `--restart=allways` attribute to have restartable container 
+> add `--restart=always` attribute to have restartable container 
